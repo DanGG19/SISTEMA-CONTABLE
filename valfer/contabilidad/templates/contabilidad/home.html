@@ -1,0 +1,23 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Inicio - VALFER COFFE{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">Bienvenido al Sistema Contable</h2>
+<p class="mb-4">Este es el sistema de gestión contable de la cafetería <strong>VALFER COFFE</strong>.</p>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="bg-white shadow-md p-4 rounded">
+        <h3 class="font-bold text-lg">Catálogo de cuentas</h3>
+        <p class="text-sm text-gray-600">Ver árbol completo de cuentas contables.</p>
+    </div>
+    <div class="bg-white shadow-md p-4 rounded">
+        <h3 class="font-bold text-lg">Registrar asiento</h3>
+        <p class="text-sm text-gray-600">Formulario para ingresar transacciones contables.</p>
+    </div>
+    <div class="bg-white shadow-md p-4 rounded">
+        <h3 class="font-bold text-lg">Reportes</h3>
+        <p class="text-sm text-gray-600">Generar estados financieros básicos.</p>
+    </div>
+</div>
+{% endblock %}

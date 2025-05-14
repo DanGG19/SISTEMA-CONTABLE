@@ -1,0 +1,43 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}
+  Listado de Asientos Contables
+{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-semibold mb-6">📋 Asientos Contables Registrados</h2>
+
+<div class="bg-white shadow-md rounded px-6 py-4">
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm border">
+      <thead class="bg-cyan-900 text-white">
+        <tr>
+          <th class="border px-4 py-2">#</th>
+          <th class="border px-4 py-2">Fecha</th>
+          <th class="border px-4 py-2">Descripción</th>
+          <th class="border px-4 py-2">Creado</th>
+          <th class="border px-4 py-2 text-right">Total Debe</th>
+          <th class="border px-4 py-2 text-right">Total Haber</th>
+          <th class="border px-4 py-2 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+   {% for item in asientos_data %}
+<tr class="border-t hover:bg-gray-100">
+  <td class="border px-4 py-2">{{ forloop.counter }}</td>
+  <td class="border px-4 py-2">{{ item.asiento.fecha }}</td>
+  <td class="border px-4 py-2">{{ item.asiento.descripcion }}</td>
+  <td class="border px-4 py-2">{{ item.asiento.creado_en|date:"d/m/Y H:i" }}</td>
+  <td class="border px-4 py-2 text-right">{{ item.total_debe|floatformat:2 }}</td>
+  <td class="border px-4 py-2 text-right">{{ item.total_haber|floatformat:2 }}</td>
+  <td class="border px-4 py-2 text-center space-x-2">
+    {% comment %} <a href="{% url 'ver_asiento' item.asiento.id %}" class="text-blue-600 hover:underline">Ver</a>
+    <a href="{% url 'eliminar_asiento' item.asiento.id %}" class="text-red-600 hover:underline" onclick="return confirm('¿Está seguro que desea eliminar este asiento?');">Eliminar</a> {% endcomment %}
+  </td>
+</tr>
+{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

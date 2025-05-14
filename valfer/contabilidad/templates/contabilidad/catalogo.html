@@ -1,0 +1,52 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}
+  Catálogo de Cuentas - VALFER COFFE
+{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-semibold mb-6">📘 Catálogo de Cuentas Contables</h2>
+
+<div class="bg-white shadow-md rounded px-6 py-4">
+  <div class="cuenta-row font-bold border-b-2 border-gray-300 pb-2 mb-2">
+    <span class="w-32 inline-block text-gray-700">Código</span>
+    <span class="flex-1 text-gray-700">Nombre</span>
+    <span class="w-32 text-gray-700">Tipo</span>
+    <span class="w-20 text-gray-700">Nivel</span>
+  </div>
+
+  {% for cuenta in cuentas %}
+    <div class="cuenta-row nivel-{{ cuenta.nivel }}">
+      <span class="w-32 font-mono text-gray-600">{{ cuenta.codigo }}</span>
+
+      <span class="flex-1" style="padding-left: {{ cuenta.nivel|stringformat:"d" }}0px;">
+        {% if cuenta.nivel == 1 %}
+          <span class="text-2xl font-extrabold text-black uppercase">{{ cuenta.nombre }}</span>
+        {% elif cuenta.nivel == 2 %}
+          <span class="text-xl font-bold text-black uppercase">{{ cuenta.nombre }}</span>
+        {% elif cuenta.nivel == 3 %}
+          <span class="text-lg font-semibold text-black uppercase">{{ cuenta.nombre }}</span>
+        {% elif cuenta.nivel == 4 %}
+          <span class="text-base font-bold text-orange-700">{{ cuenta.nombre }}</span>
+        {% else %}
+          <span class="text-sm text-gray-700">{{ cuenta.nombre }}</span>
+        {% endif %}
+      </span>
+
+      <span class="w-32 capitalize text-gray-800">{{ cuenta.tipo }}</span>
+      <span class="w-20 text-gray-500">Nivel {{ cuenta.nivel }}</span>
+    </div>
+  {% empty %}
+    <p>No hay cuentas disponibles.</p>
+  {% endfor %}
+</div>
+
+<style>
+  .cuenta-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+</style>
+{% endblock %}

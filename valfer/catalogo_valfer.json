@@ -1,0 +1,2081 @@
+[
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 1,
+    "fields": {
+      "codigo": "1",
+      "nombre": "ACTIVO",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 2,
+    "fields": {
+      "codigo": "11",
+      "nombre": "ACTIVO CORRIENTE",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 3,
+    "fields": {
+      "codigo": "1101",
+      "nombre": "EFECTIVO Y EQUIVALENTE",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 2
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 4,
+    "fields": {
+      "codigo": "1101.01",
+      "nombre": "CAJA",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 3
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 5,
+    "fields": {
+      "codigo": "1101.02",
+      "nombre": "EFECTIVO EN BANCOS",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 3
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 6,
+    "fields": {
+      "codigo": "1102",
+      "nombre": "ANTICIPO A PROVEEDORES",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 2
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 7,
+    "fields": {
+      "codigo": "1102.01",
+      "nombre": "PRESTAMOS AL PERSONAL",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 6
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 8,
+    "fields": {
+      "codigo": "1102.01.01",
+      "nombre": "Préstamos personales de administración",
+      "tipo": "activo",
+      "nivel": 3,
+      "padre": 7
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 9,
+    "fields": {
+      "codigo": "1102.01.02",
+      "nombre": "Préstamos personales de ventas",
+      "tipo": "activo",
+      "nivel": 3,
+      "padre": 7
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 10,
+    "fields": {
+      "codigo": "1103",
+      "nombre": "CUENTAS Y DOCUMENTOS POR COBRAR",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 2
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 11,
+    "fields": {
+      "codigo": "1103.01",
+      "nombre": "Clientes",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 10
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 12,
+    "fields": {
+      "codigo": "1103.02",
+      "nombre": "Otras cuentas por cobrar",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 10
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 13,
+    "fields": {
+      "codigo": "1104",
+      "nombre": "IVA CREDITO FISCAL",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 2
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 14,
+    "fields": {
+      "codigo": "1104.01",
+      "nombre": "IVA compras locales",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 13
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 15,
+    "fields": {
+      "codigo": "1104.02",
+      "nombre": "IVA Retención",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 13
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 16,
+    "fields": {
+      "codigo": "1104.03",
+      "nombre": "IVA percepción",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 13
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 17,
+    "fields": {
+      "codigo": "1104.04",
+      "nombre": "IVA Remanente",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 13
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 18,
+    "fields": {
+      "codigo": "1105",
+      "nombre": "INVENTARIOS",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 2
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 19,
+    "fields": {
+      "codigo": "1105.01",
+      "nombre": "Inventario de materia prima",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 18
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 20,
+    "fields": {
+      "codigo": "1105.02",
+      "nombre": "Inventario de productos en proceso",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 18
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 21,
+    "fields": {
+      "codigo": "1105.03",
+      "nombre": "Inventarios de producto terminado",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 18
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 22,
+    "fields": {
+      "codigo": "1106",
+      "nombre": "INVERSIONES",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 2
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 23,
+    "fields": {
+      "codigo": "1106.01",
+      "nombre": "Inversiones",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 22
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 24,
+    "fields": {
+      "codigo": "1107",
+      "nombre": "GASTOS ANTICIPADOS",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 2
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 25,
+    "fields": {
+      "codigo": "1107.01",
+      "nombre": "Seguros",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 24
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 26,
+    "fields": {
+      "codigo": "1107.02",
+      "nombre": "Alquiler pagado por anticipado",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 24
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 27,
+    "fields": {
+      "codigo": "1107.03",
+      "nombre": "Papelería y útiles",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 24
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 28,
+    "fields": {
+      "codigo": "1109",
+      "nombre": "ANTICIPO PAGO A CUENTA (ISR)",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 2
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 29,
+    "fields": {
+      "codigo": "1109.01",
+      "nombre": "Pagos anticipados ISR",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 28
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 30,
+    "fields": {
+      "codigo": "1109.02",
+      "nombre": "Remanente de ejercicios anteriores",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 28
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 31,
+    "fields": {
+      "codigo": "1109.03",
+      "nombre": "Retención impuesto a la liquidez",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 28
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 32,
+    "fields": {
+      "codigo": "12",
+      "nombre": "ACTIVO NO CORRIENTE",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 33,
+    "fields": {
+      "codigo": "1201",
+      "nombre": "PROPIEDAD, PLANTA Y EQUIPO",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 32
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 34,
+    "fields": {
+      "codigo": "1201.01",
+      "nombre": "Terrenos",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 33
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 35,
+    "fields": {
+      "codigo": "1201.02",
+      "nombre": "Edificios",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 33
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 36,
+    "fields": {
+      "codigo": "1201.03",
+      "nombre": "Mobiliario y equipo",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 33
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 37,
+    "fields": {
+      "codigo": "1201.03.01",
+      "nombre": "Mobiliario y equipo de oficina",
+      "tipo": "activo",
+      "nivel": 3,
+      "padre": 36
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 38,
+    "fields": {
+      "codigo": "1201.03.02",
+      "nombre": "Mobiliario y equipo de cocina",
+      "tipo": "activo",
+      "nivel": 3,
+      "padre": 36
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 39,
+    "fields": {
+      "codigo": "1201.04",
+      "nombre": "Herramientas y equipo",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 33
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 40,
+    "fields": {
+      "codigo": "1201.05",
+      "nombre": "Instalaciones y mejoras",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 33
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 41,
+    "fields": {
+      "codigo": "1201.06",
+      "nombre": "Depreciación acumulada-propiedad planta y equipo",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 33
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 42,
+    "fields": {
+      "codigo": "1201.06.01",
+      "nombre": "Depreciación acumulada de edificios",
+      "tipo": "activo",
+      "nivel": 3,
+      "padre": 41
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 43,
+    "fields": {
+      "codigo": "1201.06.02",
+      "nombre": "Depreciación acumulada de mobiliario y equipo",
+      "tipo": "activo",
+      "nivel": 3,
+      "padre": 41
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 44,
+    "fields": {
+      "codigo": "1201.06.02.01",
+      "nombre": "Depreciación acumulada de equipo de oficina",
+      "tipo": "activo",
+      "nivel": 4,
+      "padre": 43
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 45,
+    "fields": {
+      "codigo": "1201.06.02.02",
+      "nombre": "Depreciación acumulada de equipo de cocina",
+      "tipo": "activo",
+      "nivel": 4,
+      "padre": 43
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 46,
+    "fields": {
+      "codigo": "1202",
+      "nombre": "INTANGIBLE",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 32
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 47,
+    "fields": {
+      "codigo": "1202.01",
+      "nombre": "Derecho de llave",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 46
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 48,
+    "fields": {
+      "codigo": "1202.02",
+      "nombre": "Patentes y marcas",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 46
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 49,
+    "fields": {
+      "codigo": "1202.03",
+      "nombre": "Franquicia",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 46
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 50,
+    "fields": {
+      "codigo": "1202.04",
+      "nombre": "Licencias y concesiones",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 46
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 51,
+    "fields": {
+      "codigo": "1202.05",
+      "nombre": "Programas y sistemas",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 46
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 52,
+    "fields": {
+      "codigo": "1203",
+      "nombre": "IMPUESTO SOBRE LA RENTA DIFERIDO-ACTIVO",
+      "tipo": "activo",
+      "nivel": 1,
+      "padre": 32
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 53,
+    "fields": {
+      "codigo": "1203.01",
+      "nombre": "Crédito ISR años anteriores",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 52
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 54,
+    "fields": {
+      "codigo": "1203.02",
+      "nombre": "Activo por Impuesto sobre Renta Diferido",
+      "tipo": "activo",
+      "nivel": 2,
+      "padre": 52
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 55,
+    "fields": {
+      "codigo": "2",
+      "nombre": "PASIVO",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 56,
+    "fields": {
+      "codigo": "21",
+      "nombre": "PASIVO CORRIENTE",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 57,
+    "fields": {
+      "codigo": "2101",
+      "nombre": "CUENTAS Y DOCUMENTOS POR PAGAR",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 56
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 58,
+    "fields": {
+      "codigo": "2101.01",
+      "nombre": "Documentos por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 57
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 59,
+    "fields": {
+      "codigo": "2101.02",
+      "nombre": "Préstamos",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 57
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 60,
+    "fields": {
+      "codigo": "2101.03",
+      "nombre": "Proveedores",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 57
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 61,
+    "fields": {
+      "codigo": "2102",
+      "nombre": "ACREEDORES VARIOS",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 56
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 62,
+    "fields": {
+      "codigo": "2102.01",
+      "nombre": "Cuota Patronal ISSS",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 63,
+    "fields": {
+      "codigo": "2102.02",
+      "nombre": "Cuota patronal AFP",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 64,
+    "fields": {
+      "codigo": "2102.03",
+      "nombre": "IVA por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 65,
+    "fields": {
+      "codigo": "2102.04",
+      "nombre": "Pago a cuenta",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 66,
+    "fields": {
+      "codigo": "2102.05",
+      "nombre": "Impuestos municipales",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 67,
+    "fields": {
+      "codigo": "2102.06",
+      "nombre": "Otros impuestos por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 68,
+    "fields": {
+      "codigo": "2102.07",
+      "nombre": "Intereses por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 69,
+    "fields": {
+      "codigo": "2102.08",
+      "nombre": "Honorarios por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 70,
+    "fields": {
+      "codigo": "2102.09",
+      "nombre": "Alquileres por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 61
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 71,
+    "fields": {
+      "codigo": "22103",
+      "nombre": "RETENCIONES POR PAGAR",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 72,
+    "fields": {
+      "codigo": "2103.01",
+      "nombre": "Cotización ISSS / Salud",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 73,
+    "fields": {
+      "codigo": "2103.02",
+      "nombre": "Cotización a fondo de pensiones",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 74,
+    "fields": {
+      "codigo": "2103.02.01",
+      "nombre": "ISSS provisional",
+      "tipo": "pasivo",
+      "nivel": 3,
+      "padre": 73
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 75,
+    "fields": {
+      "codigo": "2103.02.02",
+      "nombre": "AFP Crecer",
+      "tipo": "pasivo",
+      "nivel": 3,
+      "padre": 73
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 76,
+    "fields": {
+      "codigo": "2103.02.03",
+      "nombre": "AFP Confía",
+      "tipo": "pasivo",
+      "nivel": 3,
+      "padre": 73
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 77,
+    "fields": {
+      "codigo": "2103.03",
+      "nombre": "Retención de Impuesto sobre la Renta",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 78,
+    "fields": {
+      "codigo": "2103.04",
+      "nombre": "Retención F. S. V.",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 79,
+    "fields": {
+      "codigo": "2103.05",
+      "nombre": "Órdenes de descuentos",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 80,
+    "fields": {
+      "codigo": "2104",
+      "nombre": "BENEFICIOS A EMPLEADOS POR PAGAR",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 56
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 81,
+    "fields": {
+      "codigo": "2104.01",
+      "nombre": "Sueldos por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 82,
+    "fields": {
+      "codigo": "2104.02",
+      "nombre": "Comisiones por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 83,
+    "fields": {
+      "codigo": "2104.03",
+      "nombre": "Horas extras por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 84,
+    "fields": {
+      "codigo": "2104.04",
+      "nombre": "Vacaciones por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 85,
+    "fields": {
+      "codigo": "2104.05",
+      "nombre": "Aguinaldos por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 86,
+    "fields": {
+      "codigo": "2104.06",
+      "nombre": "Gratificaciones y bonificaciones por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 87,
+    "fields": {
+      "codigo": "2104.07",
+      "nombre": "Indemnizaciones por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 88,
+    "fields": {
+      "codigo": "2104.08",
+      "nombre": "Bonificaciones por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 89,
+    "fields": {
+      "codigo": "2104.09",
+      "nombre": "Otros beneficios a empleados por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 80
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 90,
+    "fields": {
+      "codigo": "2105",
+      "nombre": "IMPUESTO SOBRE LA RENTA POR PAGAR",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 56
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 91,
+    "fields": {
+      "codigo": "2105.01",
+      "nombre": "Impuesto sobre la Renta - Corriente",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 90
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 92,
+    "fields": {
+      "codigo": "2105.02",
+      "nombre": "Pago a cuenta",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 90
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 93,
+    "fields": {
+      "codigo": "2106",
+      "nombre": "IVA - DÉBITO FISCAL",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 56
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 94,
+    "fields": {
+      "codigo": "2106.01",
+      "nombre": "IVA - débito fiscal",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 93
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 95,
+    "fields": {
+      "codigo": "2106.01.01",
+      "nombre": "IVA - débito fiscal - facturas de consumidor final",
+      "tipo": "pasivo",
+      "nivel": 3,
+      "padre": 94
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 96,
+    "fields": {
+      "codigo": "2107",
+      "nombre": "DIVIDENDOS POR PAGAR",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 56
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 97,
+    "fields": {
+      "codigo": "2107.01",
+      "nombre": "ACCIONISTA 01",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 96
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 98,
+    "fields": {
+      "codigo": "2107.02",
+      "nombre": "ACCIONISTA 02",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 96
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 99,
+    "fields": {
+      "codigo": "22",
+      "nombre": "PASIVO NO CORRIENTE",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 100,
+    "fields": {
+      "codigo": "2201",
+      "nombre": "CUENTAS Y DOCUMENTOS POR PAGAR A LARGO PLAZO",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 99
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 101,
+    "fields": {
+      "codigo": "2201.01",
+      "nombre": "Préstamos bancarios (Porción a largo plazo)",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 100
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 102,
+    "fields": {
+      "codigo": "2201.02",
+      "nombre": "Hipotecas",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 100
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 103,
+    "fields": {
+      "codigo": "2201.03",
+      "nombre": "Documentos por pagar",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 100
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 104,
+    "fields": {
+      "codigo": "2202",
+      "nombre": "PROVISIÓN PARA OBLIGACIONES LABORALES",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 99
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 105,
+    "fields": {
+      "codigo": "2202.01",
+      "nombre": "beneficios a empleados a largo plazo",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 104
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 106,
+    "fields": {
+      "codigo": "2202.02",
+      "nombre": "indemnizaciones",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 104
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 107,
+    "fields": {
+      "codigo": "2203",
+      "nombre": "PASIVO POR IMPUESTO DIFERIDO",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 99
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 108,
+    "fields": {
+      "codigo": "2203.01",
+      "nombre": "diferencias temporales imponibles",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 107
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 109,
+    "fields": {
+      "codigo": "2203.02",
+      "nombre": "impuesto sobre la renta imponible",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 107
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 110,
+    "fields": {
+      "codigo": "2204",
+      "nombre": "OBLIGACIONES POR ARRENDAMIENTO FINANCIERO A LARGO PLAZO",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 99
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 111,
+    "fields": {
+      "codigo": "2204.01",
+      "nombre": "Arrendamiento Financiero",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 110
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 112,
+    "fields": {
+      "codigo": "2205",
+      "nombre": "CRÉDITOS ANTICIPADOS",
+      "tipo": "pasivo",
+      "nivel": 1,
+      "padre": 99
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 113,
+    "fields": {
+      "codigo": "2205.01",
+      "nombre": "Anticipo de Clientes",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 112
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 114,
+    "fields": {
+      "codigo": "2205.02",
+      "nombre": "Rentas Cobradas por Anticipado",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 112
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 115,
+    "fields": {
+      "codigo": "2205.03",
+      "nombre": "Intereses Cobrados por Anticipado",
+      "tipo": "pasivo",
+      "nivel": 2,
+      "padre": 112
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 116,
+    "fields": {
+      "codigo": "3",
+      "nombre": "PATRIMONIO NETO",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 117,
+    "fields": {
+      "codigo": "31",
+      "nombre": "CAPITAL CONTABLE",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 118,
+    "fields": {
+      "codigo": "3101",
+      "nombre": "CAPITAL SOCIAL",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 117
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 119,
+    "fields": {
+      "codigo": "310101",
+      "nombre": "Capital Social Pagado",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 118
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 120,
+    "fields": {
+      "codigo": "310102",
+      "nombre": "Capital Social No Pagado",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 118
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 121,
+    "fields": {
+      "codigo": "3102",
+      "nombre": "RESERVA LEGAL",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 117
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 122,
+    "fields": {
+      "codigo": "310201",
+      "nombre": "Reserva Legal",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 121
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 123,
+    "fields": {
+      "codigo": "3103",
+      "nombre": "RESULTADOS ACUMULADOS",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 117
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 124,
+    "fields": {
+      "codigo": "310301",
+      "nombre": "Utilidades de ejercicios anteriores",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 123
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 125,
+    "fields": {
+      "codigo": "310302",
+      "nombre": "Pérdidas de ejercicios anteriores",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 123
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 126,
+    "fields": {
+      "codigo": "3104",
+      "nombre": "RESULTADOS DEL EJERCICIO",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 117
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 127,
+    "fields": {
+      "codigo": "310401",
+      "nombre": "Utilidad del ejercicio",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 126
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 128,
+    "fields": {
+      "codigo": "310402",
+      "nombre": "Pérdida del ejercicio",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 126
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 129,
+    "fields": {
+      "codigo": "3105",
+      "nombre": "OTRAS RESERVAS DE PATRIMONIO",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 117
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 130,
+    "fields": {
+      "codigo": "310501",
+      "nombre": "Superávit",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 129
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 131,
+    "fields": {
+      "codigo": "310502",
+      "nombre": "Déficit",
+      "tipo": "patrimonio",
+      "nivel": 1,
+      "padre": 129
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 132,
+    "fields": {
+      "codigo": "4",
+      "nombre": "COSTOS, GASTOS Y PERDIDAS",
+      "tipo": "gasto",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 133,
+    "fields": {
+      "codigo": "41",
+      "nombre": "COSTOS Y GASTOS DE OPERACIÓN",
+      "tipo": "gasto",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 134,
+    "fields": {
+      "codigo": "4101",
+      "nombre": "COSTO DE VENTA",
+      "tipo": "gasto",
+      "nivel": 1,
+      "padre": 133
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 135,
+    "fields": {
+      "codigo": "4101.01",
+      "nombre": "Inventarios",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": 134
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 136,
+    "fields": {
+      "codigo": "4202",
+      "nombre": "COSTOS DE PRODUCCION",
+      "tipo": "gasto",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 137,
+    "fields": {
+      "codigo": "4203.01",
+      "nombre": "Materia prima",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 138,
+    "fields": {
+      "codigo": "4203.02",
+      "nombre": "Mano de obra",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 139,
+    "fields": {
+      "codigo": "4203.03",
+      "nombre": "Costos Indirectos",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 140,
+    "fields": {
+      "codigo": "4103",
+      "nombre": "GASTOS OPERATIVOS",
+      "tipo": "gasto",
+      "nivel": 1,
+      "padre": 133
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 141,
+    "fields": {
+      "codigo": "4103.01",
+      "nombre": "GASTOS ADMINISTRATIVOS",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": 140
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 142,
+    "fields": {
+      "codigo": "4103.01.01",
+      "nombre": "Salarios",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 143,
+    "fields": {
+      "codigo": "4103.01.02",
+      "nombre": "Vacaciones",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 144,
+    "fields": {
+      "codigo": "4103.01.03",
+      "nombre": "Aguinaldos",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 145,
+    "fields": {
+      "codigo": "4103.01.04",
+      "nombre": "Bonificaciones y gratificaciones",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 146,
+    "fields": {
+      "codigo": "4103.01.05",
+      "nombre": "Horas extras",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 147,
+    "fields": {
+      "codigo": "4103.01.06",
+      "nombre": "Indemnizaciones",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 148,
+    "fields": {
+      "codigo": "4103.01.07",
+      "nombre": "Viáticos",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 149,
+    "fields": {
+      "codigo": "4103.01.08",
+      "nombre": "Cuota patronal seguridad social ISSS",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 150,
+    "fields": {
+      "codigo": "4103.01.09",
+      "nombre": "Cuota patronal fondo de pensiones AFP",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 151,
+    "fields": {
+      "codigo": "4103.01.10",
+      "nombre": "INSAFORP",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 152,
+    "fields": {
+      "codigo": "4103.01.11",
+      "nombre": "Comisiones, premios e incentivos",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 153,
+    "fields": {
+      "codigo": "4103.01.12",
+      "nombre": "Otros gastos del personal",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 154,
+    "fields": {
+      "codigo": "4103.01.13",
+      "nombre": "Alquiler de local",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 155,
+    "fields": {
+      "codigo": "4103.01.14",
+      "nombre": "Readecuación de local",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 141
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 156,
+    "fields": {
+      "codigo": "4103.02",
+      "nombre": "GASTOS DE VENTA",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": 140
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 157,
+    "fields": {
+      "codigo": "4103.02.01",
+      "nombre": "Salarios",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 158,
+    "fields": {
+      "codigo": "4103.02.02",
+      "nombre": "Vacaciones",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 159,
+    "fields": {
+      "codigo": "4103.02.03",
+      "nombre": "Aguinaldos",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 160,
+    "fields": {
+      "codigo": "4103.02.04",
+      "nombre": "Bonificaciones y gratificaciones",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 161,
+    "fields": {
+      "codigo": "4103.02.05",
+      "nombre": "Horas extras",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 162,
+    "fields": {
+      "codigo": "4103.02.06",
+      "nombre": "Indemnizaciones",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 163,
+    "fields": {
+      "codigo": "4103.02.07",
+      "nombre": "Viáticos",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 164,
+    "fields": {
+      "codigo": "4103.02.08",
+      "nombre": "Cuota patronal seguridad social ISSS",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 165,
+    "fields": {
+      "codigo": "4103.02.09",
+      "nombre": "Cuota patronal fondo de pensiones AFP",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 166,
+    "fields": {
+      "codigo": "4103.02.10",
+      "nombre": "INSAFORP",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 167,
+    "fields": {
+      "codigo": "4103.02.11",
+      "nombre": "Comisiones, premios e incentivos",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 168,
+    "fields": {
+      "codigo": "4103.02.12",
+      "nombre": "Otros gastos del personal",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 169,
+    "fields": {
+      "codigo": "4103.02.13",
+      "nombre": "Alquiler de local",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 170,
+    "fields": {
+      "codigo": "4103.02.14",
+      "nombre": "Readecuación de local",
+      "tipo": "gasto",
+      "nivel": 3,
+      "padre": 156
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 171,
+    "fields": {
+      "codigo": "4104",
+      "nombre": "GASTOS FINANCIEROS",
+      "tipo": "gasto",
+      "nivel": 1,
+      "padre": 133
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 172,
+    "fields": {
+      "codigo": "4105",
+      "nombre": "Honorarios profesionales",
+      "tipo": "gasto",
+      "nivel": 1,
+      "padre": 133
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 173,
+    "fields": {
+      "codigo": "4105.01",
+      "nombre": "Honorarios legales",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": 172
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 174,
+    "fields": {
+      "codigo": "4105.02",
+      "nombre": "Honorarios contables",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": 172
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 175,
+    "fields": {
+      "codigo": "4105.03",
+      "nombre": "Honorarios de auditoria",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": 172
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 176,
+    "fields": {
+      "codigo": "4105.04",
+      "nombre": "Honorarios por servicios administrativos",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": 172
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 177,
+    "fields": {
+      "codigo": "4206",
+      "nombre": "GASTOS POR DETERIORO EN EL VALOR DE ACTIVOS",
+      "tipo": "gasto",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 178,
+    "fields": {
+      "codigo": "4206.01",
+      "nombre": "Gastos por deterioro en el valor de activos",
+      "tipo": "gasto",
+      "nivel": 2,
+      "padre": 177
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 179,
+    "fields": {
+      "codigo": "5",
+      "nombre": "INGRESOS Y GANANCIAS",
+      "tipo": "ingreso",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 180,
+    "fields": {
+      "codigo": "51",
+      "nombre": "INGRESOS POR VENTAS",
+      "tipo": "ingreso",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 181,
+    "fields": {
+      "codigo": "5101",
+      "nombre": "INGRESOS OPERACIONALES",
+      "tipo": "ingreso",
+      "nivel": 1,
+      "padre": 180
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 182,
+    "fields": {
+      "codigo": "5101.01",
+      "nombre": "Ventas a consumidor final",
+      "tipo": "ingreso",
+      "nivel": 2,
+      "padre": 181
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 183,
+    "fields": {
+      "codigo": "5101.02",
+      "nombre": "Ingresos Financieros",
+      "tipo": "ingreso",
+      "nivel": 2,
+      "padre": 181
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 184,
+    "fields": {
+      "codigo": "5202",
+      "nombre": "UTILIDAD EN VENTA DE ACTIVOS",
+      "tipo": "ingreso",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 185,
+    "fields": {
+      "codigo": "5202.01",
+      "nombre": "Utilidad en venta de activos",
+      "tipo": "ingreso",
+      "nivel": 2,
+      "padre": 184
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 186,
+    "fields": {
+      "codigo": "6",
+      "nombre": "CUENTAS LIQUIDADORAS DE RESULTADOS",
+      "tipo": "liquidadora",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 187,
+    "fields": {
+      "codigo": "61",
+      "nombre": "CUENTA LIQUIDADORA",
+      "tipo": "liquidadora",
+      "nivel": 1,
+      "padre": null
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 188,
+    "fields": {
+      "codigo": "6101",
+      "nombre": "PÉRDIDAS Y GANANCIAS",
+      "tipo": "liquidadora",
+      "nivel": 1,
+      "padre": 187
+    }
+  },
+  {
+    "model": "contabilidad.cuentacontable",
+    "pk": 189,
+    "fields": {
+      "codigo": "6101.01",
+      "nombre": "Pérdidas y ganancias",
+      "tipo": "liquidadora",
+      "nivel": 2,
+      "padre": 188
+    }
+  }
+]

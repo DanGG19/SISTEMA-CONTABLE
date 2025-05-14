@@ -1,0 +1,226 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}
+  Registrar Asiento Contable
+{% endblock %}
+
+{% block content %}
+  <h2 class="text-2xl font-semibold mb-6">📘 Registrar Asiento Contable</h2>
+
+  <form id="asiento-form" method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="descripcion" id="id_descripcion" />
+    <input type="hidden" name="fecha" id="id_fecha" />
+
+    <div class="mb-4">
+      <h3 class="text-lg font-bold text-gray-800">📝 Descripción del Asiento:</h3>
+      <p id="descripcion_display" class="text-gray-700 italic"></p>
+    </div>
+
+    <div class="bg-white shadow-md rounded px-6 py-4">
+      <div class="overflow-x-auto">
+        <table id="detalle-table" class="min-w-full text-sm border">
+          <thead class="bg-cyan-900 text-white">
+            <tr>
+              <th class="border px-4 py-2">Fecha</th>
+              <th class="border px-4 py-2">Descripción o Concepto</th>
+              <th class="border px-4 py-2">Cuenta</th>
+              <th class="border px-4 py-2 text-right">Debe</th>
+              <th class="border px-4 py-2 text-right">Haber</th>
+            </tr>
+          </thead>
+          <tbody id="detalle-body">
+            {% for form in formset.forms %}
+              <tr class="detalle-row border-t">
+                <td class="border px-2 py-1 text-sm">{{ form.fecha }}</td>
+                <td class="border px-2 py-1 text-sm">{{ form.descripcion }}</td>
+                <td class="border px-2 py-1 text-sm">{{ form.cuenta }}</td>
+                <td class="border px-2 py-1 text-right">{{ form.debe }}</td>
+                <td class="border px-2 py-1 text-right">{{ form.haber }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="bg-gray-100 font-bold">
+              <td colspan="3" class="text-right px-4 py-2">Totales:</td>
+              <td id="total-debe" class="text-right px-4 py-2">0.00</td>
+              <td id="total-haber" class="text-right px-4 py-2">0.00</td>
+            </tr>
+          </tfoot>
+        </table>
+        {{ formset.management_form }}
+      </div>
+      <div class="mt-4">
+        <button type="button" id="add-row" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded">➕ Agregar Detalle</button>
+      </div>
+    </div>
+
+    <div class="text-right mt-4">
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">💾 Guardar Asiento</button>
+    </div>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const addRowBtn = document.getElementById('add-row')
+      const tableBody = document.getElementById('detalle-body')
+      const totalDebe = document.getElementById('total-debe')
+      const totalHaber = document.getElementById('total-haber')
+      const descripcionInput = document.getElementById('id_descripcion')
+      const fechaInput = document.getElementById('id_fecha')
+    
+      function updateTotals() {
+        let debeTotal = 0
+        let haberTotal = 0
+        document.querySelectorAll('[name$="-debe"]').forEach((input) => {
+          debeTotal += parseFloat(input.value) || 0
+        })
+        document.querySelectorAll('[name$="-haber"]').forEach((input) => {
+          haberTotal += parseFloat(input.value) || 0
+        })
+        totalDebe.textContent = debeTotal.toFixed(2)
+        totalHaber.textContent = haberTotal.toFixed(2)
+      }
+    
+      function obtenerFechaActual() {
+        const hoy = new Date()
+        const yyyy = hoy.getFullYear()
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0')
+        const dd = String(hoy.getDate()).padStart(2, '0')
+        return `${yyyy}-${mm}-${dd}`
+      }
+    
+      function descripcionDinamica() {
+        const hoy = new Date()
+        const fechaTexto = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+        return fetch(`/asientos/count/${obtenerFechaActual()}`)
+          .then((res) => res.json())
+          .then((data) => `${fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1)} - Asiento Contable ${data.count + 1}`)
+      }
+    
+      descripcionDinamica().then((desc) => {
+        descripcionInput.value = desc
+        fechaInput.value = obtenerFechaActual()
+        document.getElementById('descripcion_display').textContent = desc // mostrarlo como texto plano
+      })
+    
+      document.addEventListener('input', function (e) {
+        if (e.target.name.endsWith('-debe') || e.target.name.endsWith('-haber')) {
+          updateTotals()
+        }
+      })
+    
+      addRowBtn.addEventListener('click', function () {
+        const totalForms = document.querySelector('#id_detalleasiento_set-TOTAL_FORMS')
+        const formIdx = parseInt(totalForms.value)
+        const template = document.querySelector('.detalle-row')
+        const clone = template.cloneNode(true)
+    
+        clone.querySelectorAll('input, select, textarea').forEach((el) => {
+          const name = el.name.replace(/-\d+-/, `-${formIdx}-`)
+          const id = `id_${name}`
+          el.name = name
+          el.id = id
+          if (el.name.endsWith('-debe') || el.name.endsWith('-haber')) {
+            el.value = '0.00'
+            el.setAttribute('step', '0.01')
+          }
+        })
+    
+        totalForms.value = formIdx + 1
+        tableBody.appendChild(clone)
+      })
+    
+      updateTotals()
+    })
+    
+    function validarFormulario() {
+      let valido = true
+      let totalDebe = 0
+      let totalHaber = 0
+      let errorMsg = ''
+    
+      document.querySelectorAll('#detalle-body tr').forEach((row) => {
+        const cuenta = row.querySelector('select')
+        const fecha = row.querySelector('[name$="-fecha"]')
+        const debe = parseFloat(row.querySelector('[name$="-debe"]').value) || 0
+        const haber = parseFloat(row.querySelector('[name$="-haber"]').value) || 0
+    
+        if (!fecha || !fecha.value) {
+          valido = false
+          errorMsg = '❌ Cada detalle debe tener una fecha asignada.'
+        }
+    
+        if (!cuenta || cuenta.value === '') {
+          valido = false
+          errorMsg = '❌ Cada detalle debe tener una cuenta asignada.'
+        }
+    
+        if (debe === 0 && haber === 0) {
+          valido = false
+          errorMsg = '❌ Cada detalle debe tener un valor en debe o haber.'
+        }
+    
+        totalDebe += debe
+        totalHaber += haber
+      })
+    
+      if (totalDebe.toFixed(2) !== totalHaber.toFixed(2)) {
+        valido = false
+        errorMsg = '❌ El total del debe y el haber deben coincidir.'
+      }
+    
+      if (!valido) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de Validación',
+          text: errorMsg,
+          confirmButtonText: 'Aceptar'
+        })
+        return false
+      }
+    
+      return true
+    }
+    
+    document.getElementById('asiento-form').addEventListener('submit', function (e) {
+      e.preventDefault()
+    
+      if (!validarFormulario()) return
+    
+      const form = e.target
+      const formData = new FormData(form)
+    
+      fetch('', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        },
+        body: formData
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: '¡Asiento Guardado!',
+              text: 'El asiento contable ha sido registrado correctamente.',
+              confirmButtonText: 'Aceptar'
+            }).then(() => {
+              window.location.href = '/asientos/nuevo/'
+            })
+          }
+        })
+        .catch((error) => {
+          console.error('Error al guardar:', error)
+          Swal.fire({
+            icon: 'error',
+            title: 'Ocurrió un error',
+            text: 'No se pudo guardar el asiento.',
+            confirmButtonText: 'Aceptar'
+          })
+        })
+    })
+  </script>
+{% endblock %}
