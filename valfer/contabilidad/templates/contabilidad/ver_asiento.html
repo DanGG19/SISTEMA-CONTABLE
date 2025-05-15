@@ -1,0 +1,106 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}
+  Detalles del Asiento
+{% endblock %}
+
+{% block content %}
+  <h2 class="text-2xl font-semibold mb-4">📄 Detalles del Asiento</h2>
+
+  <div class="bg-white shadow rounded p-6 mb-6">
+    <p class="text-lg text-gray-800"><strong>📝 Descripción:</strong> {{ asiento.descripcion }}</p>
+    <p class="text-lg text-gray-800"><strong>📅 Fecha:</strong> {{ asiento.fecha|date:"l, j \d\e F \d\e Y" }}</p>
+  </div>
+
+  <div class="bg-white shadow rounded p-6 mb-6">
+    <h3 class="text-lg font-semibold mb-3 text-gray-700">📊 Detalles del Movimiento</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm text-left border">
+        <thead class="bg-cyan-900 text-white">
+          <tr>
+            <th class="border px-4 py-2">Fecha</th>
+            <th class="border px-4 py-2">Descripción</th>
+            <th class="border px-4 py-2">Cuenta</th>
+            <th class="border px-4 py-2 text-right">Debe</th>
+            <th class="border px-4 py-2 text-right">Haber</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for detalle in detalles %}
+            <tr class="border-t hover:bg-gray-50">
+              <td class="border px-4 py-2">{{ detalle.fecha|date:"d \d\e F \d\e Y" }}</td>
+              <td class="border px-4 py-2">{{ detalle.descripcion }}</td>
+              <td class="border px-4 py-2">{{ detalle.cuenta }}</td>
+              <td class="border px-4 py-2 text-right">{{ detalle.debe|floatformat:2 }}</td>
+              <td class="border px-4 py-2 text-right">{{ detalle.haber|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <button id="btnEliminar" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out animate__animated animate__pulse">🗑️ Eliminar Asiento</button>
+  </div>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"></script>
+  <script>
+    document.getElementById('btnEliminar').addEventListener('click', function () {
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta acción eliminará el asiento contable de forma permanente.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/asientos/{{ asiento.id }}/eliminar/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}'
+            }
+          })
+          .then(response => {
+            if (response.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: '¡Eliminado!',
+                text: 'El asiento contable ha sido eliminado.',
+                confirmButtonText: 'Aceptar',
+                showClass: {
+                  popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                  popup: 'animate__animated animate__fadeOutUp'
+                }
+              }).then(() => {
+                window.location.href = '/asientos/';
+              });
+            } else {
+              throw new Error();
+            }
+          })
+          .catch(() => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudo eliminar el asiento.',
+              confirmButtonText: 'OK',
+              showClass: {
+                popup: 'animate__animated animate__shakeX'
+              },
+              hideClass: {
+                popup: 'animate__animated animate__fadeOut'
+              }
+            });
+          });
+        }
+      });
+    });
+  </script>
+{% endblock %}
