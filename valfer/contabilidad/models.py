@@ -1,8 +1,5 @@
 from django.db import models
 
-# Create your models here.
-from django.db import models
-
 TIPOS_CUENTA = [
     ('activo', 'Activo'),
     ('pasivo', 'Pasivo'),
@@ -43,3 +40,38 @@ class DetalleAsiento(models.Model):
     def __str__(self):
         return f"{self.fecha} - {self.descripcion} - {self.cuenta.codigo}"
 
+# modelos para Planillas de Salarios 
+
+class Empleado(models.Model):
+    nombre = models.CharField(max_length=100)
+    dui = models.CharField(max_length=10)
+    nit = models.CharField(max_length=17)
+    cargo = models.CharField(max_length=100)
+    salario_base = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return self.nombre
+
+class Planilla(models.Model):
+    MES_CHOICES = [
+        (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'),
+        (5, 'Mayo'), (6, 'Junio'), (7, 'Julio'), (8, 'Agosto'),
+        (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre'),
+    ]
+
+    mes = models.IntegerField(choices=MES_CHOICES)
+    anio = models.IntegerField()
+    descripcion = models.CharField(max_length=255)
+    creada_en = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Planilla {self.get_mes_display()} {self.anio}"
+
+class DetallePlanilla(models.Model):
+    planilla = models.ForeignKey(Planilla, related_name='detalles', on_delete=models.CASCADE)
+    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
+    dias_trabajados = models.IntegerField()
+    salario = models.DecimalField(max_digits=10, decimal_places=2)
+    afp = models.DecimalField(max_digits=10, decimal_places=2)
+    renta = models.DecimalField(max_digits=10, decimal_places=2)
+    total_pagado = models.DecimalField(max_digits=10, decimal_places=2)

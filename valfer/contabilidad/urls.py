@@ -11,4 +11,13 @@ urlpatterns = [
     path('asientos/<int:asiento_id>/', views.ver_asiento, name='ver_asiento'),
     path('asientos/<int:asiento_id>/eliminar/', views.eliminar_asiento, name='eliminar_asiento'),
 
+    # Rutas para Planillas
+    path('planillas/crear/', crear_planilla, name='crear_planilla'),
+    path('planillas/<int:planilla_id>/detalles/', agregar_detalles, name='agregar_detalles'),
+    path('planillas/<int:planilla_id>/ver/', ver_planilla, name='ver_planilla'),
+    path('planillas/', listar_planillas, name='listar_planillas'),
+    path('planillas/<int:planilla_id>/eliminar/', eliminar_planilla, name='eliminar_planilla'),
+
+
+
 ]

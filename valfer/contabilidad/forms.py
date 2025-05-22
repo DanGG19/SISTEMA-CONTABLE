@@ -1,5 +1,5 @@
 from django import forms
-from .models import AsientoContable, DetalleAsiento, CuentaContable
+from .models import AsientoContable, DetalleAsiento, CuentaContable, Planilla,DetallePlanilla
 from django.forms import inlineformset_factory
 from decimal import Decimal
 
@@ -45,3 +45,31 @@ DetalleAsientoFormSet = inlineformset_factory(
     extra=2,
     can_delete=True
 )
+
+#pruebas para planillas
+
+from .models import Planilla
+from django import forms
+import datetime
+
+class PlanillaForm(forms.ModelForm):
+    anio = forms.IntegerField(
+        initial=datetime.date.today().year,
+        widget=forms.NumberInput(attrs={'class': 'w-full border px-3 py-2 rounded'}),
+        min_value=2020,
+        max_value=2100
+    )
+
+    class Meta:
+        model = Planilla
+        fields = ['mes', 'anio', 'descripcion']
+        widgets = {
+            'mes': forms.Select(attrs={'class': 'w-full border px-3 py-2 rounded'}),
+            'descripcion': forms.TextInput(attrs={'class': 'w-full border px-3 py-2 rounded'}),
+        }
+
+
+class DetallePlanillaForm(forms.ModelForm):
+    class Meta:
+        model = DetallePlanilla
+        fields = ['empleado', 'dias_trabajados']

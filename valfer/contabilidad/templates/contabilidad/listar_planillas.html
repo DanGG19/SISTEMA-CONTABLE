@@ -1,0 +1,70 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Listado de Planillas - VALFER COFFE{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">Listado de Planillas</h2>
+
+<div class="overflow-x-auto">
+    <table class="w-full bg-white shadow rounded text-sm">
+        <thead class="bg-amber-900 text-white">
+            <tr>
+                <th class="p-2 text-left">ID</th>
+                <th class="p-2 text-left">Fecha</th>
+                <th class="p-2 text-left">Descripción</th>
+                <th class="p-2 text-left">Creada</th>
+                <th class="p-2 text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for planilla in planillas %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-2">{{ planilla.id }}</td>
+                <td class="p-2">{{ planilla.get_mes_display }} {{ planilla.anio }}
+</td>
+                <td class="p-2">{{ planilla.descripcion }}</td>
+                <td class="p-2">{{ planilla.creada_en|date:"d/m/Y H:i" }}</td>
+                <td class="p-2 text-center space-x-2">
+                    <a href="{% url 'ver_planilla' planilla.id %}" class="text-blue-600 hover:underline">Ver</a>
+                    <a onclick="confirmarEliminacion({{ planilla.id }})"
+                        class="text-red-600 hover:underline font-semibold">Eliminar</a>
+                </td>
+
+                
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-gray-500 py-4">No hay planillas registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-6 text-center">
+    <a href="{% url 'crear_planilla' %}" class="bg-amber-900 text-white py-2 px-4 rounded hover:bg-amber-800">
+        Crear nueva planilla
+    </a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmarEliminacion(planillaId) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/planillas/${planillaId}/eliminar/`;
+        }
+    });
+}
+</script>
+
+{% endblock %}
