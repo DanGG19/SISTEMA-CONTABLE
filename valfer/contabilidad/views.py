@@ -8,6 +8,7 @@ from django.db.models import Sum
 from django.utils.timezone import now
 from decimal import Decimal
 from datetime import date
+from calendar import monthrange
 from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 
@@ -175,3 +176,93 @@ def eliminar_planilla(request, planilla_id):
     planilla.delete()
     messages.success(request, 'Planilla eliminada correctamente.')
     return redirect('listar_planillas')
+
+
+#Views para el Balance General
+
+def balance_general(request):
+    tipo = request.GET.get('tipo', 'mensual')
+    anio = int(request.GET.get('anio', date.today().year))
+    mes = int(request.GET.get('mes', date.today().month))
+
+    # Definir rango de fechas
+    if tipo == 'mensual':
+        fecha_inicio = date(anio, mes, 1)
+        ultimo_dia = monthrange(anio, mes)[1]
+        fecha_fin = date(anio, mes, ultimo_dia)
+    elif tipo == 'trimestral':
+        trimestre = (mes - 1) // 3 + 1
+        mes_inicio = (trimestre - 1) * 3 + 1
+        mes_fin = mes_inicio + 2
+        fecha_inicio = date(anio, mes_inicio, 1)
+        ultimo_dia = monthrange(anio, mes_fin)[1]
+        fecha_fin = date(anio, mes_fin, ultimo_dia)
+    elif tipo == 'anual':
+        fecha_inicio = date(anio, 1, 1)
+        fecha_fin = date(anio, 12, 31)
+    else:
+        fecha_inicio = None
+        fecha_fin = None
+
+    detalles = DetalleAsiento.objects.filter(fecha__range=[fecha_inicio, fecha_fin])
+
+    # Calcular saldos por tipo de cuenta (solo si ≠ 0)
+    cuentas = CuentaContable.objects.all().order_by('codigo')
+    resumen = {'activo': [], 'pasivo': [], 'patrimonio': []}
+    totales = {'activo': 0, 'pasivo': 0, 'patrimonio': 0}
+
+    for cuenta in cuentas:
+        saldos = detalles.filter(cuenta=cuenta).aggregate(
+            debe=Sum('debe') or 0,
+            haber=Sum('haber') or 0
+        )
+        saldo = (saldos['debe'] or 0) - (saldos['haber'] or 0)
+
+        if saldo != 0:
+            if cuenta.tipo == 'activo':
+                resumen['activo'].append({'cuenta': cuenta, 'saldo': saldo})
+                totales['activo'] += saldo
+            elif cuenta.tipo == 'pasivo':
+                resumen['pasivo'].append({'cuenta': cuenta, 'saldo': -saldo})
+                totales['pasivo'] += -saldo
+            elif cuenta.tipo == 'patrimonio':
+                resumen['patrimonio'].append({'cuenta': cuenta, 'saldo': -saldo})
+                totales['patrimonio'] += -saldo
+
+    # Guardar el balance si es POST
+    if request.method == 'POST':
+        balance = BalanceGeneral.objects.create(
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin,
+            total_activo=totales['activo'],
+            total_pasivo=totales['pasivo'],
+            total_patrimonio=totales['patrimonio'],
+        )
+
+        for tipo in resumen:
+            for item in resumen[tipo]:
+                DetalleBalance.objects.create(
+                    balance=balance,
+                    cuenta=item['cuenta'],
+                    saldo=item['saldo'],
+                )
+        return redirect('listar_balances')  # Ajusta la URL según tu proyecto
+
+    return render(request, 'estados/balance_general.html', {
+        'resumen': resumen,
+        'total_activo': totales['activo'],
+        'total_pasivo': totales['pasivo'],
+        'total_patrimonio': totales['patrimonio'],
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+        'anio': anio,
+        'tipo': tipo,
+        'mes': mes,
+    })
+
+
+def listar_balances(request):
+    balances = BalanceGeneral.objects.all().order_by('-fecha_generado')
+    return render(request, 'estados/listar_balances.html', {'balances': balances})
+
+

@@ -18,6 +18,11 @@ urlpatterns = [
     path('planillas/', listar_planillas, name='listar_planillas'),
     path('planillas/<int:planilla_id>/eliminar/', eliminar_planilla, name='eliminar_planilla'),
 
+    #Para estados financieros
+    path('estados-financieros/balance/', views.balance_general, name='balance_general'),
+    path('estados-financieros/listar-balances/', views.listar_balances, name='listar_balances'),
+    
+
 
 
 ]

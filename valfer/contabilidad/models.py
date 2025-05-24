@@ -75,3 +75,23 @@ class DetallePlanilla(models.Model):
     afp = models.DecimalField(max_digits=10, decimal_places=2)
     renta = models.DecimalField(max_digits=10, decimal_places=2)
     total_pagado = models.DecimalField(max_digits=10, decimal_places=2)
+
+#MOdelo para el balance general
+class BalanceGeneral(models.Model):
+    fecha_generado = models.DateTimeField(auto_now_add=True)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    total_activo = models.DecimalField(max_digits=12, decimal_places=2)
+    total_pasivo = models.DecimalField(max_digits=12, decimal_places=2)
+    total_patrimonio = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"Balance del {self.fecha_inicio} al {self.fecha_fin}"
+
+class DetalleBalance(models.Model):
+    balance = models.ForeignKey(BalanceGeneral, on_delete=models.CASCADE, related_name='detalles')
+    cuenta = models.ForeignKey('CuentaContable', on_delete=models.CASCADE)
+    saldo = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.cuenta} - {self.saldo}"
