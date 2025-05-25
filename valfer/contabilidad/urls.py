@@ -35,7 +35,16 @@ urlpatterns = [
     path('inventario/', views.lista_inventario, name='lista_inventario'),  
     path('movimientos/', views.lista_movimientos, name='lista_movimientos'),
     path('inventario/movimiento/agregar/', views.seleccionar_movimiento, name='seleccionar_movimiento'),
+    path('producto/agregar/', views.agregar_producto, name='agregar_producto'),
+    #Eliminar movimiento
+    path('movimiento/eliminar/<int:pk>/', views.eliminar_movimiento, name='eliminar_movimiento'),
 
-    
+
+    #CRUD para pruductos
+    path('productos/', views.lista_productos, name='lista_productos'),
+    path('producto/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
+    path('producto/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
+
+
 
 ]

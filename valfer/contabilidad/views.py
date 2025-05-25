@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import *
-from .forms import AsientoContableForm, DetalleAsientoFormSet, PlanillaForm, MovimientoInventarioForm
+from .forms import *
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseNotAllowed
 from datetime import datetime
@@ -11,6 +11,8 @@ from datetime import date
 from calendar import monthrange
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
+from django.db import transaction
+
 
 
 def home(request):
@@ -612,3 +614,82 @@ def crear_ajuste(request):
     return render(request, 'contabilidad/crear_ajuste.html', {
         'cuentas': cuentas
     })
+
+
+def agregar_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            producto = form.save(commit=False)
+            
+            # Asignar cuentas automáticamente
+            try:
+                producto.cuenta_inventario = CuentaContable.objects.get(codigo='1105.01')  # Inventario de materia prima
+                producto.cuenta_costo_venta = CuentaContable.objects.get(codigo='4101.01')  # Inventarios
+                producto.cuenta_ingresos = CuentaContable.objects.get(codigo='5101.01')  # Ventas a consumidor final
+            except CuentaContable.DoesNotExist:
+                form.add_error(None, 'No se encontraron las cuentas contables requeridas en el catálogo.')
+                return render(request, 'inventario/agregar_producto.html', {'form': form, 'titulo': 'Agregar Producto'})
+            
+            producto.save()
+            return redirect('seleccionar_movimiento')
+    else:
+        form = ProductoForm()
+    
+    return render(request, 'inventario/agregar_producto.html', {'form': form, 'titulo': 'Agregar Producto'})
+
+#Vista para eliminar un movimiento de inventario 
+@transaction.atomic
+def eliminar_movimiento(request, pk):
+    movimiento = get_object_or_404(MovimientoInventario, pk=pk)
+
+    if request.method == 'POST':
+        producto = movimiento.producto
+
+        # Revertir stock
+        if movimiento.tipo == 'compra':
+            producto.stock -= movimiento.cantidad
+        elif movimiento.tipo == 'venta':
+            producto.stock += movimiento.cantidad
+        producto.save()
+
+        # Eliminar asiento contable si existe
+        if movimiento.asiento:
+            movimiento.asiento.delete()
+
+        # Eliminar movimiento
+        movimiento.delete()
+
+        return redirect('lista_movimientos')
+
+    return render(request, 'inventario/eliminar_movimiento.html', {'movimiento': movimiento})
+
+
+#Crud para productos
+def lista_productos(request):
+    productos = Producto.objects.all()
+    return render(request, 'inventario/lista_productos.html', {'productos': productos, 'titulo': 'Lista de Productos'})
+
+def editar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, instance=producto)
+        if form.is_valid():
+            producto = form.save(commit=False)
+            producto.cuenta_inventario = CuentaContable.objects.get(codigo='1102.01')
+            producto.cuenta_costo_venta = CuentaContable.objects.get(codigo='4101.01')
+            producto.cuenta_ingresos = CuentaContable.objects.get(codigo='5101.01')
+            producto.save()
+            return redirect('lista_productos')
+    else:
+        form = ProductoForm(instance=producto)
+    return render(request, 'inventario/agregar_producto.html', {'form': form, 'titulo': 'Editar Producto'})
+
+def eliminar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        producto.delete()
+        return redirect('lista_productos')
+    return render(request, 'inventario/eliminar_producto.html', {'producto': producto})
+
+

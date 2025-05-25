@@ -51,3 +51,7 @@ def filter_producto(queryset, producto_id):
     if producto_id and hasattr(queryset, 'filter'):
         return queryset.filter(producto_id=producto_id)
     return queryset
+
+@register.filter(name='add_class')
+def add_class(field, css_class):
+    return field.as_widget(attrs={'class': css_class})

@@ -101,7 +101,6 @@ class Producto(models.Model):
     codigo = models.CharField(max_length=20, unique=True)
     nombre = models.CharField(max_length=100)
     precio_compra = models.DecimalField(max_digits=10, decimal_places=2)  # Costo unitario
-    precio_venta = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField(default=0)
     cuenta_inventario = models.ForeignKey(CuentaContable, on_delete=models.PROTECT, related_name='productos_inventario')  # Ej: 1105.01
     cuenta_ingresos = models.ForeignKey(CuentaContable, on_delete=models.PROTECT, related_name='productos_ingresos')  # Ej: 5101.01

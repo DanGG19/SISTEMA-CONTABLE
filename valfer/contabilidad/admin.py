@@ -17,7 +17,7 @@ admin.site.register(DetalleAsiento)
 # Configuración avanzada para Producto y MovimientoInventario
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('codigo', 'nombre', 'stock', 'precio_compra', 'precio_venta')
+    list_display = ('codigo', 'nombre', 'stock', 'precio_compra')  # precio_venta eliminado
     search_fields = ('codigo', 'nombre')
 
 @admin.register(MovimientoInventario)

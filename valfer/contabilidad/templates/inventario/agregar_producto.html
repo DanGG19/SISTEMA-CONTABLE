@@ -1,7 +1,7 @@
 {% extends 'contabilidad/base.html' %}
-
-{% block title %}{{ titulo }} - VALFER COFFE{% endblock %}
 {% load custom_filters %}
+
+{% block title %}Agregar Producto - VALFER COFFE{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
@@ -12,17 +12,11 @@
             {% csrf_token %}
             
             {% for field in form %}
-            <div class="border-b border-dashed pb-4">
+            <div>
                 <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-amber-800 mb-1">
                     {{ field.label }}
                 </label>
                 {{ field|add_class:"w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" }}
-                
-                {% if field.name == 'precio_unitario' %}
-                    <p class="text-xs text-gray-500 mt-1">
-                        Ingresa el precio unitario para esta transacción.
-                    </p>
-                {% endif %}
                 
                 {% if field.errors %}
                 <p class="text-red-600 text-sm mt-1">{{ field.errors.0 }}</p>
@@ -39,7 +33,6 @@
                 </a>
             </div>
         </form>
-
     </div>
 </div>
 {% endblock %}

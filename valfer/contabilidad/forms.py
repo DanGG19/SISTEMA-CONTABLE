@@ -1,7 +1,9 @@
 from django import forms
-from .models import AsientoContable, DetalleAsiento, CuentaContable, Planilla,DetallePlanilla
+from .models import *
 from django.forms import inlineformset_factory
 from decimal import Decimal
+from .models import Planilla
+import datetime
 
 class AsientoContableForm(forms.ModelForm):
     class Meta:
@@ -47,11 +49,6 @@ DetalleAsientoFormSet = inlineformset_factory(
 )
 
 #pruebas para planillas
-
-from .models import Planilla
-from django import forms
-import datetime
-
 class PlanillaForm(forms.ModelForm):
     anio = forms.IntegerField(
         initial=datetime.date.today().year,
@@ -76,8 +73,6 @@ class DetallePlanillaForm(forms.ModelForm):
 
 
 #Inventario Perpetuo
-from django import forms
-from .models import MovimientoInventario, Producto
 
 class MovimientoInventarioForm(forms.ModelForm):
     class Meta:
@@ -91,7 +86,18 @@ class MovimientoInventarioForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['producto'].queryset = Producto.objects.all()
         if self.instance and self.instance.tipo:
-            self.fields['precio_unitario'].initial = (
-                self.instance.producto.precio_compra if self.instance.tipo == 'compra' 
-                else self.instance.producto.precio_venta
-            )
+            if self.instance.tipo == 'compra':
+                self.fields['precio_unitario'].initial = self.instance.producto.precio_compra
+
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['codigo', 'nombre', 'stock', 'precio_compra']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'w-full border px-3 py-2 rounded'}),
+            'nombre': forms.TextInput(attrs={'class': 'w-full border px-3 py-2 rounded'}),
+            'stock': forms.NumberInput(attrs={'class': 'w-full border px-3 py-2 rounded'}),
+            'precio_compra': forms.NumberInput(attrs={'class': 'w-full border px-3 py-2 rounded'}),
+        }
+

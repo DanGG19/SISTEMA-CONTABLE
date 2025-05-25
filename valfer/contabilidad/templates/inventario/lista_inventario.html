@@ -24,7 +24,6 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Producto</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Stock</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Precio Compra</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Precio Venta</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Valor Total</th>
                 </tr>
             </thead>
@@ -39,12 +38,13 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ producto.precio_compra|floatformat:2 }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ producto.precio_venta|floatformat:2 }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${{ producto.precio_compra|mul:producto.stock|floatformat:2 }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${{ producto.precio_compra|mul:producto.stock|floatformat:2 }}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No hay productos registrados</td>
+                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No hay productos registrados</td>
                 </tr>
                 {% endfor %}
             </tbody>

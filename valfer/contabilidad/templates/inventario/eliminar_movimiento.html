@@ -1,0 +1,24 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Eliminar Movimiento - VALFER COFFE{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white shadow-md rounded-lg p-6 max-w-md mx-auto text-center">
+        <h2 class="text-xl font-bold text-amber-900 mb-4">¿Eliminar este movimiento?</h2>
+        <p class="text-gray-700 mb-4">
+            <strong>Tipo:</strong> {{ movimiento.get_tipo_display }}<br>
+            <strong>Producto:</strong> {{ movimiento.producto.nombre }}<br>
+            <strong>Cantidad:</strong> {{ movimiento.cantidad }}<br>
+            <strong>Precio Unitario:</strong> ${{ movimiento.precio_unitario|floatformat:2 }}
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition">
+                Sí, eliminar
+            </button>
+            <a href="{% url 'lista_movimientos' %}" class="ml-4 text-sm text-gray-600 hover:text-amber-700">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

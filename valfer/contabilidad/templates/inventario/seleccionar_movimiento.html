@@ -6,6 +6,13 @@
 <div class="container mx-auto px-4 py-10">
     <h2 class="text-3xl font-bold text-center text-amber-900 mb-8">Agregar Movimiento</h2>
 
+    <!-- Botón para agregar nuevo producto -->
+    <div class="text-center mb-8">
+        <a href="{% url 'agregar_producto' %}" class="inline-block bg-amber-700 hover:bg-amber-800 text-white font-medium px-6 py-2 rounded-md shadow-md transition">
+            + Agregar Nuevo Producto
+        </a>
+    </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
         <!-- Opción Compra -->
         <a href="{% url 'registrar_compra' %}" class="block bg-white border border-amber-300 rounded-xl shadow-md hover:shadow-xl transition p-6 text-center">
@@ -29,7 +36,6 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Producto</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Stock</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Precio Compra</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Precio Venta</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -38,11 +44,10 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ producto.nombre }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ producto.stock }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ producto.precio_compra|floatformat:2 }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ producto.precio_venta|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No hay productos registrados</td>
+                    <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">No hay productos registrados</td>
                 </tr>
                 {% endfor %}
             </tbody>
