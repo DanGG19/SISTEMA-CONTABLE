@@ -10,6 +10,8 @@ urlpatterns = [
     path('asientos/', views.listar_asientos, name='listar_asientos'),
     path('asientos/<int:asiento_id>/', views.ver_asiento, name='ver_asiento'),
     path('asientos/<int:asiento_id>/eliminar/', views.eliminar_asiento, name='eliminar_asiento'),
+    path('iva/calcular/', views.calcular_iva, name='calcular_iva'),
+
 
     # Rutas para Planillas
     path('planillas/crear/', crear_planilla, name='crear_planilla'),

@@ -452,6 +452,123 @@ def lista_movimientos(request):
         'tipo_seleccionado': tipo
     })
 
+
 def seleccionar_movimiento(request):
     productos = Producto.objects.all()
     return render(request, 'inventario/seleccionar_movimiento.html', {'productos': productos})
+
+
+#Calcular el IVA
+from django.db.models import Sum
+from django.shortcuts import render, redirect
+from datetime import date
+from calendar import monthrange
+from .models import CuentaContable, DetalleAsiento, AsientoContable
+
+def calcular_iva(request):
+    MES_NOMBRES = [
+        (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'),
+        (4, 'Abril'), (5, 'Mayo'), (6, 'Junio'),
+        (7, 'Julio'), (8, 'Agosto'), (9, 'Septiembre'),
+        (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre'),
+    ]
+
+    anio = int(request.GET.get('anio', date.today().year))
+    mes = int(request.GET.get('mes', date.today().month))
+
+    fecha_inicio = date(anio, mes, 1)
+    ultimo_dia = monthrange(anio, mes)[1]
+    fecha_fin = date(anio, mes, ultimo_dia)
+
+    detalles = DetalleAsiento.objects.filter(fecha__range=[fecha_inicio, fecha_fin])
+
+    # Cuentas de IVA (ajusta los prefijos si es necesario)
+    cuentas_credito = CuentaContable.objects.filter(codigo__startswith='1104')
+    cuentas_debito = CuentaContable.objects.filter(codigo__startswith='2106')
+
+    total_credito = 0
+    total_debito = 0
+
+    for cuenta in cuentas_credito:
+        saldo = detalles.filter(cuenta=cuenta).aggregate(
+            debe=Sum('debe') or 0,
+            haber=Sum('haber') or 0
+        )
+        total_credito += (saldo['debe'] or 0) - (saldo['haber'] or 0)
+
+    for cuenta in cuentas_debito:
+        saldo = detalles.filter(cuenta=cuenta).aggregate(
+            debe=Sum('debe') or 0,
+            haber=Sum('haber') or 0
+        )
+        total_debito += (saldo['haber'] or 0) - (saldo['debe'] or 0)
+
+    iva_pagar = total_debito - total_credito
+
+    if request.method == 'POST':
+        asiento = AsientoContable.objects.create(
+            fecha=fecha_fin,
+            descripcion=f"Cierre de IVA - {fecha_inicio.strftime('%B %Y')}"
+        )
+
+        for cuenta in cuentas_debito:
+            saldo = detalles.filter(cuenta=cuenta).aggregate(
+                debe=Sum('debe') or 0,
+                haber=Sum('haber') or 0
+            )
+            saldo_debito = (saldo['haber'] or 0) - (saldo['debe'] or 0)
+            if saldo_debito != 0:
+                DetalleAsiento.objects.create(
+                    asiento=asiento,
+                    fecha=fecha_fin,
+                    cuenta=cuenta,
+                    debe=saldo_debito,
+                    haber=0
+                )
+
+        for cuenta in cuentas_credito:
+            saldo = detalles.filter(cuenta=cuenta).aggregate(
+                debe=Sum('debe') or 0,
+                haber=Sum('haber') or 0
+            )
+            saldo_credito = (saldo['debe'] or 0) - (saldo['haber'] or 0)
+            if saldo_credito != 0:
+                DetalleAsiento.objects.create(
+                    asiento=asiento,
+                    fecha=fecha_fin,
+                    cuenta=cuenta,
+                    debe=0,
+                    haber=saldo_credito
+                )
+
+        cuenta_iva_pagar = CuentaContable.objects.get(codigo='2102.03')
+        if iva_pagar > 0:
+            DetalleAsiento.objects.create(
+                asiento=asiento,
+                fecha=fecha_fin,
+                cuenta=cuenta_iva_pagar,
+                debe=0,
+                haber=iva_pagar
+            )
+        elif iva_pagar < 0:
+            DetalleAsiento.objects.create(
+                asiento=asiento,
+                fecha=fecha_fin,
+                cuenta=cuenta_iva_pagar,
+                debe=abs(iva_pagar),
+                haber=0
+            )
+
+        return redirect('listar_asientos')
+
+    return render(request, 'contabilidad/calcular_iva.html', {
+        'anio': anio,
+        'mes': mes,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+        'total_debito': total_debito,
+        'total_credito': total_credito,
+        'iva_pagar': iva_pagar,
+        'meses': MES_NOMBRES,
+    })
+
