@@ -11,6 +11,7 @@ urlpatterns = [
     path('asientos/<int:asiento_id>/', views.ver_asiento, name='ver_asiento'),
     path('asientos/<int:asiento_id>/eliminar/', views.eliminar_asiento, name='eliminar_asiento'),
     path('iva/calcular/', views.calcular_iva, name='calcular_iva'),
+    path('ajustes/nuevo/', views.crear_ajuste, name='crear_ajuste'),
 
 
     # Rutas para Planillas

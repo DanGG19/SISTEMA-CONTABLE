@@ -579,3 +579,36 @@ def calcular_iva(request):
         'meses': MES_NOMBRES,
     })
 
+
+#view para ajustes contables
+def crear_ajuste(request):
+    cuentas = CuentaContable.objects.all().order_by('codigo')
+
+    if request.method == 'POST':
+        fecha = request.POST.get('fecha') or timezone.now().date()
+        descripcion = request.POST.get('descripcion', 'Ajuste Contable Manual')
+
+        asiento = AsientoContable.objects.create(
+            fecha=fecha,
+            descripcion=descripcion
+        )
+
+        for cuenta_id in request.POST.getlist('cuenta_id'):
+            debe = float(request.POST.get(f'debe_{cuenta_id}', 0) or 0)
+            haber = float(request.POST.get(f'haber_{cuenta_id}', 0) or 0)
+
+            if debe != 0 or haber != 0:
+                cuenta = CuentaContable.objects.get(id=cuenta_id)
+                DetalleAsiento.objects.create(
+                    asiento=asiento,
+                    fecha=fecha,
+                    cuenta=cuenta,
+                    debe=debe,
+                    haber=haber
+                )
+
+        return redirect('listar_asientos')  # Cambia por la ruta de tu listado de asientos
+
+    return render(request, 'contabilidad/crear_ajuste.html', {
+        'cuentas': cuentas
+    })

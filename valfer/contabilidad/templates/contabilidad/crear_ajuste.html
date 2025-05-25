@@ -1,0 +1,59 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Registrar Ajuste Contable{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl font-extrabold text-amber-800 mb-6">📝 Registrar Ajuste Contable</h2>
+
+    <form method="post" class="bg-white p-6 rounded shadow space-y-4">
+        {% csrf_token %}
+        <div class="flex flex-wrap gap-4">
+            <label class="flex flex-col text-sm font-semibold text-gray-700 flex-1">
+                Fecha del Ajuste:
+                <input type="date" name="fecha" class="border border-gray-300 rounded p-2">
+            </label>
+            <label class="flex flex-col text-sm font-semibold text-gray-700 flex-1">
+                Descripción:
+                <input type="text" name="descripcion" class="border border-gray-300 rounded p-2" placeholder="Descripción del ajuste">
+            </label>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm border mt-4">
+                <thead class="bg-cyan-900 text-white">
+                    <tr>
+                        <th class="border px-4 py-2 text-left">Cuenta</th>
+                        <th class="border px-4 py-2 text-right">Debe</th>
+                        <th class="border px-4 py-2 text-right">Haber</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cuenta in cuentas %}
+                    <tr class="border-t hover:bg-amber-50">
+                        <td class="border px-4 py-2">
+                            <input type="hidden" name="cuenta_id" value="{{ cuenta.id }}">
+                            {{ cuenta.codigo }} - {{ cuenta.nombre }}
+                        </td>
+                        <td class="border px-4 py-2 text-right">
+                            <input type="number" name="debe_{{ cuenta.id }}" step="0.01" class="border border-gray-300 rounded p-1 w-24 text-right">
+                        </td>
+                        <td class="border px-4 py-2 text-right">
+                            <input type="number" name="haber_{{ cuenta.id }}" step="0.01" class="border border-gray-300 rounded p-1 w-24 text-right">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-right mt-4">
+            <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600">💾 Guardar Ajuste</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Opcional: Agrega lógica para validar que debe != haber en la misma fila si quieres más robustez
+</script>
+{% endblock %}
