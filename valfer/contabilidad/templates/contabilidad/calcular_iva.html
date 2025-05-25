@@ -1,0 +1,43 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Cálculo y Cierre de IVA{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <h2 class="text-3xl font-extrabold text-amber-800 mb-6">🧮 Cálculo y Cierre de IVA</h2>
+
+  <form method="get" class="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end mb-6">
+    <label class="flex flex-col text-sm font-semibold text-gray-700">
+      Año:
+      <input type="number" name="anio" value="{{ anio }}" min="2000" max="2100" class="border border-gray-300 rounded p-1">
+    </label>
+
+    <label class="flex flex-col text-sm font-semibold text-gray-700">
+      Mes:
+      <select name="mes" class="border border-gray-300 rounded p-1">
+        {% for numero, nombre in meses %}
+          <option value="{{ numero }}" {% if mes == numero %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Calcular</button>
+  </form>
+
+  <div class="bg-white shadow rounded p-4">
+    <h3 class="text-lg font-bold mb-4 text-amber-800">Resumen del IVA ({{ fecha_inicio }} al {{ fecha_fin }})</h3>
+    <ul class="text-sm text-gray-700 space-y-2">
+      <li>🧾 <strong>Total IVA Débito Fiscal (Ventas):</strong> {{ total_debito|floatformat:2 }}</li>
+      <li>🧾 <strong>Total IVA Crédito Fiscal (Compras):</strong> {{ total_credito|floatformat:2 }}</li>
+      <li>💸 <strong>IVA a Pagar (Débito - Crédito):</strong> {{ iva_pagar|floatformat:2 }}</li>
+    </ul>
+  </div>
+
+  {% if iva_pagar %}
+    <form method="post" class="mt-6 text-right">
+      {% csrf_token %}
+      <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600">💾 Generar Cierre de IVA</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}
