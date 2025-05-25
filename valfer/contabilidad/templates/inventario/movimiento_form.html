@@ -1,0 +1,33 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}{{ titulo }} - VALFER COFFE{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-bold text-amber-900 mb-4">{{ titulo }}</h2>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div class="mt-6">
+                <button type="submit" class="bg-amber-700 hover:bg-amber-800 text-white px-4 py-2 rounded-md transition duration-300">
+                    Guardar
+                </button>
+                <a href="javascript:history.back()" class="ml-4 text-sm text-gray-600 hover:text-amber-700">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

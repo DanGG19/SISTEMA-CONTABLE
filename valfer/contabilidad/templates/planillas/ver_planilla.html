@@ -1,0 +1,50 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Resumen de Planilla - VALFER COFFE{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-4">Resumen de Planilla</h2>
+<p class="text-gray-600 mb-6">Planilla del <strong>{{ planilla.get_mes_display }} {{ planilla.anio }}
+</strong> | {{ planilla.descripcion }}</p>
+
+<div class="overflow-x-auto">
+    <table class="w-full bg-white shadow rounded text-sm">
+        <thead class="bg-amber-900 text-white">
+            <tr>
+                <th class="p-2 text-left">Empleado</th>
+                <th class="p-2 text-center">Días</th>
+                <th class="p-2 text-right">Salario</th>
+                <th class="p-2 text-right">AFP</th>
+                <th class="p-2 text-right">Renta</th>
+                <th class="p-2 text-right">Total Pagado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-2">{{ detalle.empleado.nombre }}</td>
+                <td class="p-2 text-center">{{ detalle.dias_trabajados }}</td>
+                <td class="p-2 text-right">$ {{ detalle.salario }}</td>
+                <td class="p-2 text-right">$ {{ detalle.afp }}</td>
+                <td class="p-2 text-right">$ {{ detalle.renta }}</td>
+                <td class="p-2 text-right font-semibold text-green-600">$ {{ detalle.total_pagado }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-4 text-gray-500">No hay detalles registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-6 text-right text-xl font-semibold text-gray-700">
+    Total General: <span class="text-green-700">$ {{ total_general }}</span>
+</div>
+
+<div class="mt-8 text-center">
+    <a href="{% url 'crear_planilla' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Crear nueva planilla
+    </a>
+</div>
+{% endblock %}

@@ -73,3 +73,25 @@ class DetallePlanillaForm(forms.ModelForm):
     class Meta:
         model = DetallePlanilla
         fields = ['empleado', 'dias_trabajados']
+
+
+#Inventario Perpetuo
+from django import forms
+from .models import MovimientoInventario, Producto
+
+class MovimientoInventarioForm(forms.ModelForm):
+    class Meta:
+        model = MovimientoInventario
+        fields = ['fecha', 'producto', 'tipo', 'cantidad', 'precio_unitario', 'iva']
+        widgets = {
+            'fecha': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['producto'].queryset = Producto.objects.all()
+        if self.instance and self.instance.tipo:
+            self.fields['precio_unitario'].initial = (
+                self.instance.producto.precio_compra if self.instance.tipo == 'compra' 
+                else self.instance.producto.precio_venta
+            )

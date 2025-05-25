@@ -28,7 +28,11 @@ urlpatterns = [
 
 
     
-
-
+    #Inventario Perpetuo
+    path('inventario/compras/registrar/', views.registrar_movimiento, {'tipo': 'compra'}, name='registrar_compra'),
+    path('inventario/ventas/registrar/', views.registrar_movimiento, {'tipo': 'venta'}, name='registrar_venta'),
+    path('inventario/', views.lista_inventario, name='lista_inventario'),  
+    path('movimientos/', views.lista_movimientos, name='lista_movimientos'),
+    
 
 ]

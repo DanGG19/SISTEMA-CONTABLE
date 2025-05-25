@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import *
-from .forms import AsientoContableForm, DetalleAsientoFormSet, PlanillaForm
+from .forms import AsientoContableForm, DetalleAsientoFormSet, PlanillaForm, MovimientoInventarioForm
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseNotAllowed
 from datetime import datetime
@@ -10,7 +10,7 @@ from decimal import Decimal
 from datetime import date
 from calendar import monthrange
 from django.views.decorators.csrf import csrf_exempt
-from decimal import Decimal
+from django.core.paginator import Paginator
 
 def home(request):
     return render(request, 'contabilidad/home.html')
@@ -371,4 +371,72 @@ def ver_resultado(request, resultado_id):
         'resultado': resultado,
         'ingresos': ingresos,
         'gastos': gastos
+    })
+#Inventario Perpetuo
+
+def registrar_movimiento(request, tipo):
+    if request.method == 'POST':
+        form = MovimientoInventarioForm(request.POST)
+        if form.is_valid():
+            movimiento = form.save(commit=False)
+            movimiento.tipo = tipo
+            producto = movimiento.producto
+
+            # Validar stock en ventas
+            if tipo == 'venta' and producto.stock < movimiento.cantidad:
+                form.add_error('cantidad', 'Stock insuficiente')
+            else:
+                movimiento.save()
+                return redirect('lista_inventario')
+    else:
+        initial = {'tipo': tipo, 'iva': 0.13}
+        form = MovimientoInventarioForm(initial=initial)
+
+    return render(request, 'inventario/movimiento_form.html', {
+        'form': form,
+        'titulo': 'Compra' if tipo == 'compra' else 'Venta'
+    })
+
+def lista_inventario(request):
+    productos = Producto.objects.all()
+    movimientos = MovimientoInventario.objects.order_by('-fecha')[:10]  # Últimos 10 movimientos
+    return render(request, 'inventario/lista_inventario.html', {
+        'productos': productos,
+        'movimientos': movimientos
+    })
+
+def lista_movimientos(request):
+    # Query base SIN filtros para los contadores
+    movimientos_base = MovimientoInventario.objects.all()
+    
+    # Query para la tabla CON filtros
+    movimientos_filtrados = movimientos_base.order_by('-fecha')
+    
+    # Aplicar filtros
+    producto_id = request.GET.get('producto')
+    tipo = request.GET.get('tipo')
+    
+    if producto_id:
+        movimientos_filtrados = movimientos_filtrados.filter(producto_id=producto_id)
+    if tipo:
+        movimientos_filtrados = movimientos_filtrados.filter(tipo=tipo)
+    
+    # Calcular totales
+    for mov in movimientos_filtrados:
+        mov.total_calculado = mov.cantidad * mov.precio_unitario
+    
+    # Paginación
+    paginator = Paginator(movimientos_filtrados, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'inventario/lista_movimientos.html', {
+        'movimientos': page_obj,          # Datos paginados y filtrados
+        'movimientos_base': movimientos_base,  # Datos SIN filtrar para contadores
+        'productos': Producto.objects.all(),
+        'page_obj': page_obj,
+        'filtros_aplicados': {
+            'producto': producto_id,
+            'tipo': tipo
+        }
     })
