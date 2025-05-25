@@ -268,6 +268,12 @@ def listar_balances(request):
 
 #View para estado de resultados
 def estado_resultados(request):
+    tipos_periodo = [
+        ("mensual", "Mensual"),
+        ("trimestral", "Trimestral"),
+        ("anual", "Anual"),
+    ]
+
     tipo = request.GET.get('tipo', 'mensual')
     anio = int(request.GET.get('anio', date.today().year))
     mes = int(request.GET.get('mes', date.today().month))
@@ -350,6 +356,7 @@ def estado_resultados(request):
         'anio': anio,
         'tipo': tipo,
         'mes': mes,
+        'tipos_periodo': tipos_periodo,  # Aquí pasamos la variable al template
     })
 
 def listar_resultados(request):

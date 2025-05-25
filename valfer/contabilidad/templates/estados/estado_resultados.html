@@ -10,9 +10,9 @@
         <label class="flex flex-col text-sm font-semibold text-gray-700">
             Tipo:
             <select name="tipo" id="tipo" class="border border-gray-300 rounded p-1">
-                <option value="mensual" {% if tipo=='mensual' %}selected{% endif %}>Mensual</option>
-                <option value="trimestral" {% if tipo=='trimestral' %}selected{% endif %}>Trimestral</option>
-                <option value="anual" {% if tipo=='anual' %}selected{% endif %}>Anual</option>
+                {% for valor, nombre in tipos_periodo %}
+                    <option value="{{ valor }}" {% if valor == tipo %}selected{% endif %}>{{ nombre }}</option>
+                {% endfor %}
             </select>
         </label>
         <label class="flex flex-col text-sm font-semibold text-gray-700">
@@ -23,18 +23,18 @@
         <label id="label-mes" class="flex flex-col text-sm font-semibold text-gray-700 hidden">
             Mes/Trimestre:
             <select name="mes" id="mes" class="border border-gray-300 rounded p-1">
-                <option value="1" {% if mes==1 %}selected{% endif %}>Enero / Q1</option>
-                <option value="2" {% if mes==2 %}selected{% endif %}>Febrero</option>
-                <option value="3" {% if mes==3 %}selected{% endif %}>Marzo</option>
-                <option value="4" {% if mes==4 %}selected{% endif %}>Abril / Q2</option>
-                <option value="5" {% if mes==5 %}selected{% endif %}>Mayo</option>
-                <option value="6" {% if mes==6 %}selected{% endif %}>Junio</option>
-                <option value="7" {% if mes==7 %}selected{% endif %}>Julio / Q3</option>
-                <option value="8" {% if mes==8 %}selected{% endif %}>Agosto</option>
-                <option value="9" {% if mes==9 %}selected{% endif %}>Septiembre</option>
-                <option value="10" {% if mes==10 %}selected{% endif %}>Octubre / Q4</option>
-                <option value="11" {% if mes==11 %}selected{% endif %}>Noviembre</option>
-                <option value="12" {% if mes==12 %}selected{% endif %}>Diciembre</option>
+                <option value="1" {% if mes == 1 %}selected{% endif %}>Enero / Q1</option>
+                <option value="2" {% if mes == 2 %}selected{% endif %}>Febrero</option>
+                <option value="3" {% if mes == 3 %}selected{% endif %}>Marzo</option>
+                <option value="4" {% if mes == 4 %}selected{% endif %}>Abril / Q2</option>
+                <option value="5" {% if mes == 5 %}selected{% endif %}>Mayo</option>
+                <option value="6" {% if mes == 6 %}selected{% endif %}>Junio</option>
+                <option value="7" {% if mes == 7 %}selected{% endif %}>Julio / Q3</option>
+                <option value="8" {% if mes == 8 %}selected{% endif %}>Agosto</option>
+                <option value="9" {% if mes == 9 %}selected{% endif %}>Septiembre</option>
+                <option value="10" {% if mes == 10 %}selected{% endif %}>Octubre / Q4</option>
+                <option value="11" {% if mes == 11 %}selected{% endif %}>Noviembre</option>
+                <option value="12" {% if mes == 12 %}selected{% endif %}>Diciembre</option>
             </select>
         </label>
         <button type="submit" class="bg-amber-800 text-white px-4 py-2 rounded hover:bg-amber-700">Generar</button>
@@ -121,7 +121,6 @@
         <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600">💾 Guardar Estado de
             Resultados</button>
     </form>
-
 
     {% else %}
     <p class="text-gray-600 mt-4">No hay datos para mostrar en este periodo.</p>
