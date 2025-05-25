@@ -3,21 +3,37 @@
 {% block title %}Inicio - VALFER COFFE{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-semibold mb-4">Bienvenido al Sistema Contable</h2>
-<p class="mb-4">Este es el sistema de gestión contable de la cafetería <strong>VALFER COFFE</strong>.</p>
+<h2 class="text-3xl font-extrabold text-amber-800 mb-6">Bienvenido al Sistema Contable de VALFER COFFE</h2>
+<p class="mb-6 text-gray-700">Selecciona una opción para comenzar a trabajar con el sistema.</p>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    <div class="bg-white shadow-md p-4 rounded">
-        <h3 class="font-bold text-lg">Catálogo de cuentas</h3>
-        <p class="text-sm text-gray-600">Ver árbol completo de cuentas contables.</p>
-    </div>
-    <div class="bg-white shadow-md p-4 rounded">
-        <h3 class="font-bold text-lg">Registrar asiento</h3>
-        <p class="text-sm text-gray-600">Formulario para ingresar transacciones contables.</p>
-    </div>
-    <div class="bg-white shadow-md p-4 rounded">
-        <h3 class="font-bold text-lg">Reportes</h3>
-        <p class="text-sm text-gray-600">Generar estados financieros básicos.</p>
-    </div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <a href="/catalogo/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">📘 Catálogo de Cuentas</h3>
+        <p class="text-sm text-gray-600">Ver el árbol completo de cuentas contables.</p>
+    </a>
+    <a href="/asientos/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">📝 Registrar Asientos</h3>
+        <p class="text-sm text-gray-600">Ingresar transacciones contables.</p>
+    </a>
+    <a href="/planillas/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">👥 Planillas</h3>
+        <p class="text-sm text-gray-600">Gestionar empleados y pagos de planilla.</p>
+    </a>
+    <a href="/estados-financieros/balance/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">📊 Balance General</h3>
+        <p class="text-sm text-gray-600">Generar el Balance General para un periodo.</p>
+    </a>
+    <a href="/estados-financieros/listar-balances/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">📚 Balances Guardados</h3>
+        <p class="text-sm text-gray-600">Ver historial de balances generados.</p>
+    </a>
+    <a href="/estados-financieros/resultado/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">📈 Estado de Resultados</h3>
+        <p class="text-sm text-gray-600">Generar el Estado de Resultados por periodo.</p>
+    </a>
+    <a href="/estados-financieros/listar-resultados/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">📂 Resultados Guardados</h3>
+        <p class="text-sm text-gray-600">Ver historial de estados de resultados.</p>
+    </a>
 </div>
 {% endblock %}

@@ -265,4 +265,110 @@ def listar_balances(request):
     balances = BalanceGeneral.objects.all().order_by('-fecha_generado')
     return render(request, 'estados/listar_balances.html', {'balances': balances})
 
+#View para estado de resultados
+def estado_resultados(request):
+    tipo = request.GET.get('tipo', 'mensual')
+    anio = int(request.GET.get('anio', date.today().year))
+    mes = int(request.GET.get('mes', date.today().month))
 
+    # Calcular rango de fechas
+    if tipo == 'mensual':
+        fecha_inicio = date(anio, mes, 1)
+        ultimo_dia = monthrange(anio, mes)[1]
+        fecha_fin = date(anio, mes, ultimo_dia)
+    elif tipo == 'trimestral':
+        trimestre = (mes - 1) // 3 + 1
+        mes_inicio = (trimestre - 1) * 3 + 1
+        mes_fin = mes_inicio + 2
+        fecha_inicio = date(anio, mes_inicio, 1)
+        ultimo_dia = monthrange(anio, mes_fin)[1]
+        fecha_fin = date(anio, mes_fin, ultimo_dia)
+    elif tipo == 'anual':
+        fecha_inicio = date(anio, 1, 1)
+        fecha_fin = date(anio, 12, 31)
+
+    detalles = DetalleAsiento.objects.filter(fecha__range=[fecha_inicio, fecha_fin])
+
+    # Calcular ingresos y gastos
+    ingresos = []
+    gastos = []
+    total_ingresos = 0
+    total_gastos = 0
+
+    cuentas = CuentaContable.objects.all().order_by('codigo')
+
+    for cuenta in cuentas:
+        saldos = detalles.filter(cuenta=cuenta).aggregate(
+            debe=Sum('debe') or 0,
+            haber=Sum('haber') or 0
+        )
+        saldo = (saldos['haber'] or 0) - (saldos['debe'] or 0)
+
+        if cuenta.tipo == 'ingreso' and saldo != 0:
+            ingresos.append({'cuenta': cuenta, 'saldo': saldo})
+            total_ingresos += saldo
+        elif cuenta.tipo in ['gasto', 'costo'] and saldo != 0:
+            gastos.append({'cuenta': cuenta, 'saldo': saldo})
+            total_gastos += saldo
+
+    utilidad = total_ingresos - total_gastos
+
+    # Guardar el estado de resultados
+    if request.method == 'POST':
+        estado = EstadoResultados.objects.create(
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin,
+            total_ingresos=total_ingresos,
+            total_gastos=total_gastos,
+            utilidad_neta=utilidad,
+        )
+
+        for item in ingresos:
+            DetalleResultado.objects.create(
+                estado=estado,
+                cuenta=item['cuenta'],
+                monto=item['saldo'],
+            )
+        for item in gastos:
+            DetalleResultado.objects.create(
+                estado=estado,
+                cuenta=item['cuenta'],
+                monto=-item['saldo'],  # Negativo para gastos
+            )
+
+        return redirect('listar_resultados')  # Ajusta el nombre según tu ruta
+
+    return render(request, 'estados/estado_resultados.html', {
+        'ingresos': ingresos,
+        'gastos': gastos,
+        'total_ingresos': total_ingresos,
+        'total_gastos': total_gastos,
+        'utilidad': utilidad,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+        'anio': anio,
+        'tipo': tipo,
+        'mes': mes,
+    })
+
+def listar_resultados(request):
+    resultados = EstadoResultados.objects.all().order_by('-fecha_generado')
+    return render(request, 'estados/listar_resultados.html', {'resultados': resultados})
+
+def ver_resultado(request, resultado_id):
+    resultado = get_object_or_404(EstadoResultados, pk=resultado_id)
+    detalles = resultado.detalles.all().select_related('cuenta').order_by('cuenta__codigo')
+
+    ingresos = []
+    gastos = []
+    for item in detalles:
+        if item.cuenta.tipo == 'ingreso':
+            ingresos.append(item)
+        else:
+            gastos.append(item)
+
+    return render(request, 'estados/ver_resultado.html', {
+        'resultado': resultado,
+        'ingresos': ingresos,
+        'gastos': gastos
+    })

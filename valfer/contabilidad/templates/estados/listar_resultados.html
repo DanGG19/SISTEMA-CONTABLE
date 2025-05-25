@@ -1,0 +1,44 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Estados de Resultados Guardados{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <h2 class="text-3xl font-extrabold mb-4 text-amber-800">📊 Estados de Resultados Guardados</h2>
+
+  {% if resultados %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border shadow rounded">
+        <thead class="bg-amber-800 text-white">
+          <tr>
+            <th class="px-4 py-2 text-left">#</th>
+            <th class="px-4 py-2 text-left">Periodo</th>
+            <th class="px-4 py-2 text-left">Generado en</th>
+            <th class="px-4 py-2 text-right">Total Ingresos</th>
+            <th class="px-4 py-2 text-right">Total Gastos</th>
+            <th class="px-4 py-2 text-right">Utilidad Neta</th>
+            <th class="px-4 py-2 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for estado in resultados %}
+            <tr class="border-t hover:bg-amber-50">
+              <td class="px-4 py-2">{{ forloop.counter }}</td>
+              <td class="px-4 py-2">{{ estado.fecha_inicio }} - {{ estado.fecha_fin }}</td>
+              <td class="px-4 py-2">{{ estado.fecha_generado|date:"d/m/Y H:i" }}</td>
+              <td class="px-4 py-2 text-right">{{ estado.total_ingresos|floatformat:2 }}</td>
+              <td class="px-4 py-2 text-right">{{ estado.total_gastos|floatformat:2 }}</td>
+              <td class="px-4 py-2 text-right">{{ estado.utilidad_neta|floatformat:2 }}</td>
+              <td class="px-4 py-2 text-center">
+                <a href="{% url 'ver_resultado' estado.id %}" class="text-blue-600 hover:underline">👁️ Ver Detalle</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-gray-600 mt-4">No hay estados de resultados guardados todavía.</p>
+  {% endif %}
+</div>
+{% endblock %}

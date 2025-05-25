@@ -5,42 +5,49 @@
 {% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-semibold mb-6">📋 Asientos Contables Registrados</h2>
+<div class="max-w-6xl mx-auto">
+  <h2 class="text-3xl font-extrabold text-amber-800 mb-6">📋 Asientos Contables Registrados</h2>
 
-<div class="bg-white shadow-md rounded px-6 py-4">
-  <div class="overflow-x-auto">
-    <table class="min-w-full text-sm border">
-      <thead class="bg-cyan-900 text-white">
-        <tr>
-          <th class="border px-4 py-2">#</th>
-          <th class="border px-4 py-2">Fecha</th>
-          <th class="border px-4 py-2">Descripción</th>
-          <th class="border px-4 py-2">Creado</th>
-          <th class="border px-4 py-2 text-right">Total Debe</th>
-          <th class="border px-4 py-2 text-right">Total Haber</th>
-          <th class="border px-4 py-2 text-center">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in asientos_data %}
-          <tr class="border-t hover:bg-gray-100">
-            <td class="border px-4 py-2">{{ forloop.counter }}</td>
-            <td class="border px-4 py-2">{{ item.asiento.fecha }}</td>
-            <td class="border px-4 py-2">{{ item.asiento.descripcion }}</td>
-            <td class="border px-4 py-2">{{ item.asiento.creado_en|date:"d/m/Y H:i" }}</td>
-            <td class="border px-4 py-2 text-right">{{ item.total_debe|floatformat:2 }}</td>
-            <td class="border px-4 py-2 text-right">{{ item.total_haber|floatformat:2 }}</td>
-            <td class="border px-4 py-2 text-center space-x-2">
-              <a href="{% url 'ver_asiento' item.asiento.id %}" class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded font-semibold">👁️ Ver</a>
-              <button onclick="confirmarEliminacion({{ item.asiento.id }})" class="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded font-semibold">🗑️ Eliminar</button>
-            </td>
+  <div class="flex justify-end mb-4">
+    <a href="{% url 'crear_asiento_contable' %}" class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded font-semibold shadow inline-flex items-center">
+      ➕ Agregar Asiento
+    </a>
+  </div>
+
+  <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm border-collapse">
+        <thead class="bg-cyan-900 text-white">
+          <tr>
+            <th class="border px-4 py-2">#</th>
+            <th class="border px-4 py-2">Fecha</th>
+            <th class="border px-4 py-2">Descripción</th>
+            <th class="border px-4 py-2">Creado</th>
+            <th class="border px-4 py-2 text-right">Total Debe</th>
+            <th class="border px-4 py-2 text-right">Total Haber</th>
+            <th class="border px-4 py-2 text-center">Acciones</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for item in asientos_data %}
+            <tr class="border-t hover:bg-amber-50">
+              <td class="border px-4 py-2">{{ forloop.counter }}</td>
+              <td class="border px-4 py-2">{{ item.asiento.fecha }}</td>
+              <td class="border px-4 py-2">{{ item.asiento.descripcion }}</td>
+              <td class="border px-4 py-2">{{ item.asiento.creado_en|date:"d/m/Y H:i" }}</td>
+              <td class="border px-4 py-2 text-right">{{ item.total_debe|floatformat:2 }}</td>
+              <td class="border px-4 py-2 text-right">{{ item.total_haber|floatformat:2 }}</td>
+              <td class="border px-4 py-2 text-center space-x-2">
+                <a href="{% url 'ver_asiento' item.asiento.id %}" class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded font-semibold">👁️ Ver</a>
+                <button onclick="confirmarEliminacion({{ item.asiento.id }})" class="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded font-semibold">🗑️ Eliminar</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

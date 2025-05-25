@@ -95,3 +95,23 @@ class DetalleBalance(models.Model):
 
     def __str__(self):
         return f"{self.cuenta} - {self.saldo}"
+
+#Modelo para el estado de resultados
+class EstadoResultados(models.Model):
+    fecha_generado = models.DateTimeField(auto_now_add=True)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    total_ingresos = models.DecimalField(max_digits=12, decimal_places=2)
+    total_gastos = models.DecimalField(max_digits=12, decimal_places=2)
+    utilidad_neta = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"Resultado del {self.fecha_inicio} al {self.fecha_fin}"
+
+class DetalleResultado(models.Model):
+    estado = models.ForeignKey(EstadoResultados, on_delete=models.CASCADE, related_name='detalles')
+    cuenta = models.ForeignKey(CuentaContable, on_delete=models.CASCADE)
+    monto = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.cuenta} - {self.monto}"

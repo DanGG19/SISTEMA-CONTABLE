@@ -21,6 +21,12 @@ urlpatterns = [
     #Para estados financieros
     path('estados-financieros/balance/', views.balance_general, name='balance_general'),
     path('estados-financieros/listar-balances/', views.listar_balances, name='listar_balances'),
+    path('estados-financieros/resultado/', views.estado_resultados, name='estado_resultados'),
+    path('estados-financieros/listar-resultados/', views.listar_resultados, name='listar_resultados'),
+    path('estados-financieros/listar-resultados/resultados/<int:resultado_id>/', views.ver_resultado, name='ver_resultado'),
+
+
+
     
 
 

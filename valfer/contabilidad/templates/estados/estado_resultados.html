@@ -1,0 +1,148 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Estado de Resultados{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl font-extrabold mb-4 text-amber-800">📈 Estado de Resultados</h2>
+
+    <form method="get" class="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end">
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Tipo:
+            <select name="tipo" id="tipo" class="border border-gray-300 rounded p-1">
+                <option value="mensual" {% if tipo=='mensual' %}selected{% endif %}>Mensual</option>
+                <option value="trimestral" {% if tipo=='trimestral' %}selected{% endif %}>Trimestral</option>
+                <option value="anual" {% if tipo=='anual' %}selected{% endif %}>Anual</option>
+            </select>
+        </label>
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Año:
+            <input type="number" name="anio" value="{{ anio }}" min="2000" max="2100"
+                class="border border-gray-300 rounded p-1">
+        </label>
+        <label id="label-mes" class="flex flex-col text-sm font-semibold text-gray-700 hidden">
+            Mes/Trimestre:
+            <select name="mes" id="mes" class="border border-gray-300 rounded p-1">
+                <option value="1" {% if mes==1 %}selected{% endif %}>Enero / Q1</option>
+                <option value="2" {% if mes==2 %}selected{% endif %}>Febrero</option>
+                <option value="3" {% if mes==3 %}selected{% endif %}>Marzo</option>
+                <option value="4" {% if mes==4 %}selected{% endif %}>Abril / Q2</option>
+                <option value="5" {% if mes==5 %}selected{% endif %}>Mayo</option>
+                <option value="6" {% if mes==6 %}selected{% endif %}>Junio</option>
+                <option value="7" {% if mes==7 %}selected{% endif %}>Julio / Q3</option>
+                <option value="8" {% if mes==8 %}selected{% endif %}>Agosto</option>
+                <option value="9" {% if mes==9 %}selected{% endif %}>Septiembre</option>
+                <option value="10" {% if mes==10 %}selected{% endif %}>Octubre / Q4</option>
+                <option value="11" {% if mes==11 %}selected{% endif %}>Noviembre</option>
+                <option value="12" {% if mes==12 %}selected{% endif %}>Diciembre</option>
+            </select>
+        </label>
+        <button type="submit" class="bg-amber-800 text-white px-4 py-2 rounded hover:bg-amber-700">Generar</button>
+    </form>
+
+    {% if fecha_inicio and fecha_fin %}
+    <div class="mt-4 text-sm text-gray-600 bg-amber-100 p-2 rounded">
+        🔎 <strong>Periodo:</strong> {{ fecha_inicio }} al {{ fecha_fin }}
+    </div>
+    {% endif %}
+
+    {% if ingresos or gastos %}
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded shadow p-4">
+            <h3 class="text-lg font-bold text-green-700 mb-2"> Ingresos</h3>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left border-b">
+                        <th>Cuenta</th>
+                        <th class="text-right">Monto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ingresos %}
+                    <tr class="border-b hover:bg-green-50">
+                        <td>{{ item.cuenta.codigo }} - {{ item.cuenta.nombre }}</td>
+                        <td class="text-right">{{ item.saldo|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-gray-500">No hay ingresos en este periodo.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="font-bold text-green-800">
+                        <td>Total Ingresos</td>
+                        <td class="text-right">{{ total_ingresos|floatformat:2 }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="bg-white rounded shadow p-4">
+            <h3 class="text-lg font-bold text-red-700 mb-2"> Gastos y Costos</h3>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left border-b">
+                        <th>Cuenta</th>
+                        <th class="text-right">Monto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in gastos %}
+                    <tr class="border-b hover:bg-red-50">
+                        <td>{{ item.cuenta.codigo }} - {{ item.cuenta.nombre }}</td>
+                        <td class="text-right">{{ item.saldo|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-gray-500">No hay gastos en este periodo.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="font-bold text-red-800">
+                        <td>Total Gastos</td>
+                        <td class="text-right">{{ total_gastos|floatformat:2 }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-6 text-center text-xl font-bold bg-gray-100 p-4 rounded shadow">
+        Utilidad Neta: <span class="text-amber-800">{{ utilidad|floatformat:2 }}</span>
+    </div>
+
+    <form method="post" class="mt-6 text-right">
+        {% csrf_token %}
+        <input type="hidden" name="tipo" value="{{ tipo }}">
+        <input type="hidden" name="anio" value="{{ anio }}">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600">💾 Guardar Estado de
+            Resultados</button>
+    </form>
+
+
+    {% else %}
+    <p class="text-gray-600 mt-4">No hay datos para mostrar en este periodo.</p>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tipoSelect = document.getElementById('tipo')
+        const labelMes = document.getElementById('label-mes')
+
+        function toggleCampos() {
+            const tipo = tipoSelect.value
+            labelMes.classList.add('hidden')
+            if (tipo !== 'anual') {
+                labelMes.classList.remove('hidden')
+            }
+        }
+
+        tipoSelect.addEventListener('change', toggleCampos)
+        toggleCampos()
+    })
+</script>
+{% endblock %}

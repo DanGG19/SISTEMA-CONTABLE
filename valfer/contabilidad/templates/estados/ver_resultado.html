@@ -1,0 +1,80 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Detalle del Estado de Resultados{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <h2 class="text-3xl font-extrabold mb-4 text-amber-800">📋 Detalle del Estado de Resultados</h2>
+
+  <div class="bg-amber-100 p-4 rounded text-sm text-gray-700 mb-4">
+    📅 Periodo: {{ resultado.fecha_inicio }} al {{ resultado.fecha_fin }} <br>
+    🕑 Generado: {{ resultado.fecha_generado|date:"d/m/Y H:i" }}
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white rounded shadow p-4">
+      <h3 class="text-lg font-bold text-green-700 mb-2"> Ingresos</h3>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left border-b">
+            <th>Cuenta</th>
+            <th class="text-right">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in ingresos %}
+            <tr class="border-b hover:bg-green-50">
+              <td>{{ item.cuenta.codigo }} - {{ item.cuenta.nombre }}</td>
+              <td class="text-right">{{ item.monto|floatformat:2 }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="2" class="text-center text-gray-500">No hay ingresos registrados.</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="font-bold text-green-800">
+            <td>Total Ingresos</td>
+            <td class="text-right">{{ resultado.total_ingresos|floatformat:2 }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="bg-white rounded shadow p-4">
+      <h3 class="text-lg font-bold text-red-700 mb-2"> Gastos y Costos</h3>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left border-b">
+            <th>Cuenta</th>
+            <th class="text-right">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in gastos %}
+            <tr class="border-b hover:bg-red-50">
+              <td>{{ item.cuenta.codigo }} - {{ item.cuenta.nombre }}</td>
+              <td class="text-right">{{ item.monto|floatformat:2 }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="2" class="text-center text-gray-500">No hay gastos registrados.</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="font-bold text-red-800">
+            <td>Total Gastos</td>
+            <td class="text-right">{{ resultado.total_gastos|floatformat:2 }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-6 text-center text-xl font-bold bg-gray-100 p-4 rounded shadow">
+     Utilidad Neta: <span class="text-amber-800">{{ resultado.utilidad_neta|floatformat:2 }}</span>
+  </div>
+
+  <div class="mt-6 text-right">
+    <a href="{% url 'listar_resultados' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">⬅️ Volver a Estados de Resultados</a>
+  </div>
+</div>
+{% endblock %}

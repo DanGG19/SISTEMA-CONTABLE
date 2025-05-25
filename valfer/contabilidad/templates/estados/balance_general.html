@@ -3,118 +3,112 @@
 {% block title %}Balance General{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-bold mb-4">📊 Balance General</h2>
+<div class="max-w-5xl mx-auto">
+  <h2 class="text-3xl font-extrabold mb-4 text-amber-800">📊 Balance General</h2>
 
-<form method="get" class="mb-4 flex flex-wrap gap-4">
-  <label>Tipo de Balance:
-    <select name="tipo" id="tipo" class="border p-1 rounded">
-      <option value="mensual" {% if tipo == 'mensual' %}selected{% endif %}>Mensual</option>
-      <option value="trimestral" {% if tipo == 'trimestral' %}selected{% endif %}>Trimestral</option>
-      <option value="anual" {% if tipo == 'anual' %}selected{% endif %}>Anual</option>
-    </select>
-  </label>
+  <form method="get" class="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end">
+    <label class="flex flex-col text-sm font-semibold text-gray-700">
+      Tipo de Balance:
+      <select name="tipo" id="tipo" class="border border-gray-300 rounded p-1">
+        <option value="mensual" {% if tipo == 'mensual' %}selected{% endif %}>Mensual</option>
+        <option value="trimestral" {% if tipo == 'trimestral' %}selected{% endif %}>Trimestral</option>
+        <option value="anual" {% if tipo == 'anual' %}selected{% endif %}>Anual</option>
+      </select>
+    </label>
 
-  <label>Año:
-    <input type="number" name="anio" id="anio" value="{{ anio }}" min="2000" max="2100" class="border p-1 rounded">
-  </label>
+    <label class="flex flex-col text-sm font-semibold text-gray-700">
+      Año:
+      <input type="number" name="anio" id="anio" value="{{ anio }}" min="2000" max="2100" class="border border-gray-300 rounded p-1">
+    </label>
 
-  <label id="label-mes" class="hidden">Mes:
-    <select name="mes" id="mes" class="border p-1 rounded">
-      <option value="1" {% if mes == 1 %}selected{% endif %}>Enero</option>
-      <option value="2" {% if mes == 2 %}selected{% endif %}>Febrero</option>
-      <option value="3" {% if mes == 3 %}selected{% endif %}>Marzo</option>
-      <option value="4" {% if mes == 4 %}selected{% endif %}>Abril</option>
-      <option value="5" {% if mes == 5 %}selected{% endif %}>Mayo</option>
-      <option value="6" {% if mes == 6 %}selected{% endif %}>Junio</option>
-      <option value="7" {% if mes == 7 %}selected{% endif %}>Julio</option>
-      <option value="8" {% if mes == 8 %}selected{% endif %}>Agosto</option>
-      <option value="9" {% if mes == 9 %}selected{% endif %}>Septiembre</option>
-      <option value="10" {% if mes == 10 %}selected{% endif %}>Octubre</option>
-      <option value="11" {% if mes == 11 %}selected{% endif %}>Noviembre</option>
-      <option value="12" {% if mes == 12 %}selected{% endif %}>Diciembre</option>
-    </select>
-  </label>
+    <label id="label-mes" class="flex flex-col text-sm font-semibold text-gray-700 hidden">
+      Mes/Trimestre:
+      <select name="mes" id="mes" class="border border-gray-300 rounded p-1">
+        <option value="1" {% if mes == 1 %}selected{% endif %}>Enero / Q1</option>
+        <option value="2" {% if mes == 2 %}selected{% endif %}>Febrero</option>
+        <option value="3" {% if mes == 3 %}selected{% endif %}>Marzo</option>
+        <option value="4" {% if mes == 4 %}selected{% endif %}>Abril / Q2</option>
+        <option value="5" {% if mes == 5 %}selected{% endif %}>Mayo</option>
+        <option value="6" {% if mes == 6 %}selected{% endif %}>Junio</option>
+        <option value="7" {% if mes == 7 %}selected{% endif %}>Julio / Q3</option>
+        <option value="8" {% if mes == 8 %}selected{% endif %}>Agosto</option>
+        <option value="9" {% if mes == 9 %}selected{% endif %}>Septiembre</option>
+        <option value="10" {% if mes == 10 %}selected{% endif %}>Octubre / Q4</option>
+        <option value="11" {% if mes == 11 %}selected{% endif %}>Noviembre</option>
+        <option value="12" {% if mes == 12 %}selected{% endif %}>Diciembre</option>
+      </select>
+    </label>
 
-  <label id="label-trimestre" class="hidden">Trimestre:
-    <select name="mes" id="trimestre" class="border p-1 rounded">
-      <option value="1" {% if mes == 1 %}selected{% endif %}>Q1 (Ene-Mar)</option>
-      <option value="4" {% if mes == 4 %}selected{% endif %}>Q2 (Abr-Jun)</option>
-      <option value="7" {% if mes == 7 %}selected{% endif %}>Q3 (Jul-Sep)</option>
-      <option value="10" {% if mes == 10 %}selected{% endif %}>Q4 (Oct-Dic)</option>
-    </select>
-  </label>
-
-  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Generar</button>
-</form>
-
-{% if fecha_inicio and fecha_fin %}
-  <div class="mt-2 text-sm text-gray-700">
-    🔎 <strong>Periodo:</strong> {{ fecha_inicio }} al {{ fecha_fin }}
-  </div>
-{% endif %}
-
-{% if resumen %}
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-    {% for tipo, cuentas in resumen.items %}
-      <div class="border p-4 rounded shadow">
-        <h3 class="text-lg font-semibold capitalize">{{ tipo }}</h3>
-        <table class="w-full text-sm">
-          <thead>
-            <tr><th>Cuenta</th><th class="text-right">Saldo</th></tr>
-          </thead>
-          <tbody>
-            {% for item in cuentas %}
-              <tr>
-                <td>{{ item.cuenta.codigo }} - {{ item.cuenta.nombre }}</td>
-                <td class="text-right">{{ item.saldo|floatformat:2 }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-          <tfoot>
-            <tr class="font-bold">
-              <td>Total {{ tipo|capfirst }}</td>
-              <td class="text-right">
-                {% if tipo == 'activo' %}
-                  {{ total_activo|floatformat:2 }}
-                {% elif tipo == 'pasivo' %}
-                  {{ total_pasivo|floatformat:2 }}
-                {% elif tipo == 'patrimonio' %}
-                  {{ total_patrimonio|floatformat:2 }}
-                {% endif %}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    {% endfor %}
-  </div>
-
-  <form method="post" class="mt-6">
-    {% csrf_token %}
-    <input type="hidden" name="tipo" value="{{ tipo }}">
-    <input type="hidden" name="anio" value="{{ anio }}">
-    <input type="hidden" name="mes" value="{{ mes }}">
-    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">💾 Guardar Balance</button>
+    <button type="submit" class="bg-amber-800 text-white px-4 py-2 rounded hover:bg-amber-700">Generar</button>
   </form>
-{% else %}
-  <p class="text-gray-600 mt-4">No hay datos para mostrar.</p>
-{% endif %}
+
+  {% if fecha_inicio and fecha_fin %}
+    <div class="mt-4 text-sm text-gray-600 bg-amber-100 p-2 rounded">
+      🔎 <strong>Periodo:</strong> {{ fecha_inicio }} al {{ fecha_fin }}
+    </div>
+  {% endif %}
+
+  {% if resumen %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      {% for tipo, cuentas in resumen.items %}
+        <div class="bg-white rounded shadow p-4">
+          <h3 class="text-lg font-bold text-amber-800 capitalize mb-2">{{ tipo }}</h3>
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left border-b">
+                <th>Cuenta</th>
+                <th class="text-right">Saldo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in cuentas %}
+                <tr class="border-b hover:bg-amber-50">
+                  <td>{{ item.cuenta.codigo }} - {{ item.cuenta.nombre }}</td>
+                  <td class="text-right">{{ item.saldo|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="font-bold text-amber-800">
+                <td>Total {{ tipo|capfirst }}</td>
+                <td class="text-right">
+                  {% if tipo == 'activo' %}
+                    {{ total_activo|floatformat:2 }}
+                  {% elif tipo == 'pasivo' %}
+                    {{ total_pasivo|floatformat:2 }}
+                  {% elif tipo == 'patrimonio' %}
+                    {{ total_patrimonio|floatformat:2 }}
+                  {% endif %}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+
+    <form method="post" class="mt-6 text-right">
+      {% csrf_token %}
+      <input type="hidden" name="tipo" value="{{ tipo }}">
+      <input type="hidden" name="anio" value="{{ anio }}">
+      <input type="hidden" name="mes" value="{{ mes }}">
+      <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600">💾 Guardar Balance</button>
+    </form>
+  {% else %}
+    <p class="text-gray-600 mt-4">No hay datos para mostrar en este periodo.</p>
+  {% endif %}
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const tipoSelect = document.getElementById('tipo')
   const labelMes = document.getElementById('label-mes')
-  const labelTrimestre = document.getElementById('label-trimestre')
 
   function toggleCampos() {
     const tipo = tipoSelect.value
     labelMes.classList.add('hidden')
-    labelTrimestre.classList.add('hidden')
-
-    if (tipo === 'mensual') {
+    if (tipo !== 'anual') {
       labelMes.classList.remove('hidden')
-    } else if (tipo === 'trimestral') {
-      labelTrimestre.classList.remove('hidden')
     }
   }
 
