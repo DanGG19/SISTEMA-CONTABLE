@@ -12,6 +12,7 @@ from calendar import monthrange
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 
+
 def home(request):
     return render(request, 'contabilidad/home.html')
 
@@ -386,9 +387,17 @@ def registrar_movimiento(request, tipo):
             if tipo == 'venta' and producto.stock < movimiento.cantidad:
                 form.add_error('cantidad', 'Stock insuficiente')
             else:
-                movimiento.save()
+                # Actualizar stock según el tipo
+                if tipo == 'compra':
+                    producto.stock += movimiento.cantidad
+                elif tipo == 'venta':
+                    producto.stock -= movimiento.cantidad
+                producto.save()  # Guardar el nuevo stock
+
+                movimiento.save()  # Guardar el movimiento
                 return redirect('lista_inventario')
     else:
+        # Si es GET, mostrar el formulario
         initial = {'tipo': tipo, 'iva': 0.13}
         form = MovimientoInventarioForm(initial=initial)
 
@@ -396,6 +405,8 @@ def registrar_movimiento(request, tipo):
         'form': form,
         'titulo': 'Compra' if tipo == 'compra' else 'Venta'
     })
+
+
 
 def lista_inventario(request):
     productos = Producto.objects.all()
@@ -412,21 +423,22 @@ def lista_movimientos(request):
     # Query para la tabla CON filtros
     movimientos_filtrados = movimientos_base.order_by('-fecha')
     
-    # Aplicar filtros
-    producto_id = request.GET.get('producto')
-    tipo = request.GET.get('tipo')
+    # Obtener filtros de la request (con valores por defecto seguros)
+    producto_id = request.GET.get('producto', '')
+    tipo = request.GET.get('tipo', '')
     
+    # Aplicar filtros si existen
     if producto_id:
         movimientos_filtrados = movimientos_filtrados.filter(producto_id=producto_id)
     if tipo:
         movimientos_filtrados = movimientos_filtrados.filter(tipo=tipo)
     
-    # Calcular totales
+    # Calcular totales por movimiento (puede ser útil para la tabla)
     for mov in movimientos_filtrados:
         mov.total_calculado = mov.cantidad * mov.precio_unitario
     
     # Paginación
-    paginator = Paginator(movimientos_filtrados, 10)
+    paginator = Paginator(movimientos_filtrados, 10)  # 10 por página
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -435,8 +447,11 @@ def lista_movimientos(request):
         'movimientos_base': movimientos_base,  # Datos SIN filtrar para contadores
         'productos': Producto.objects.all(),
         'page_obj': page_obj,
-        'filtros_aplicados': {
-            'producto': producto_id,
-            'tipo': tipo
-        }
+        # Filtros para mantener selección en la UI
+        'producto_seleccionado': producto_id,
+        'tipo_seleccionado': tipo
     })
+
+def seleccionar_movimiento(request):
+    productos = Producto.objects.all()
+    return render(request, 'inventario/seleccionar_movimiento.html', {'productos': productos})

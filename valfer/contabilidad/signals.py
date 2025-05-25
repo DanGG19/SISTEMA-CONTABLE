@@ -2,26 +2,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import MovimientoInventario, AsientoContable, DetalleAsiento, CuentaContable
 import logging
+
 logger = logging.getLogger(__name__)
-
-@receiver(post_save, sender=MovimientoInventario)
-def actualizar_stock(sender, instance, created, **kwargs):
-    try:
-        logger.info(f"Iniciando señal para movimiento ID: {instance.id}")
-        
-        producto = instance.producto
-        if instance.tipo == 'compra':
-            producto.stock += instance.cantidad
-            logger.info(f"Stock aumentado: +{instance.cantidad}")
-        elif instance.tipo == 'venta':
-            producto.stock -= instance.cantidad
-            logger.info(f"Stock reducido: -{instance.cantidad}")
-        
-        producto.save()
-        logger.info(f"Nuevo stock de {producto.nombre}: {producto.stock}")
-
-    except Exception as e:
-        logger.error(f"Error en señal: {str(e)}")
 
 @receiver(post_save, sender=MovimientoInventario)
 def generar_asientos_inventario(sender, instance, created, **kwargs):

@@ -26,13 +26,13 @@ urlpatterns = [
     path('estados-financieros/listar-resultados/resultados/<int:resultado_id>/', views.ver_resultado, name='ver_resultado'),
 
 
-
-    
     #Inventario Perpetuo
     path('inventario/compras/registrar/', views.registrar_movimiento, {'tipo': 'compra'}, name='registrar_compra'),
     path('inventario/ventas/registrar/', views.registrar_movimiento, {'tipo': 'venta'}, name='registrar_venta'),
     path('inventario/', views.lista_inventario, name='lista_inventario'),  
     path('movimientos/', views.lista_movimientos, name='lista_movimientos'),
+    path('inventario/movimiento/agregar/', views.seleccionar_movimiento, name='seleccionar_movimiento'),
+
     
 
 ]

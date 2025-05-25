@@ -82,7 +82,7 @@ from .models import MovimientoInventario, Producto
 class MovimientoInventarioForm(forms.ModelForm):
     class Meta:
         model = MovimientoInventario
-        fields = ['fecha', 'producto', 'tipo', 'cantidad', 'precio_unitario', 'iva']
+        fields = ['fecha', 'producto', 'cantidad', 'precio_unitario', 'iva']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
         }

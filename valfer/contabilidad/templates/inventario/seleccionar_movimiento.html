@@ -1,0 +1,52 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Agregar Movimiento - VALFER COFFE{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-10">
+    <h2 class="text-3xl font-bold text-center text-amber-900 mb-8">Agregar Movimiento</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
+        <!-- Opción Compra -->
+        <a href="{% url 'registrar_compra' %}" class="block bg-white border border-amber-300 rounded-xl shadow-md hover:shadow-xl transition p-6 text-center">
+            <h3 class="text-xl font-semibold text-amber-800 mb-2">Agregar Compra</h3>
+            <p class="text-sm text-gray-600">Registrar el ingreso de productos al inventario.</p>
+        </a>
+
+        <!-- Opción Venta -->
+        <a href="{% url 'registrar_venta' %}" class="block bg-white border border-amber-300 rounded-xl shadow-md hover:shadow-xl transition p-6 text-center">
+            <h3 class="text-xl font-semibold text-amber-800 mb-2">Agregar Venta</h3>
+            <p class="text-sm text-gray-600">Registrar la salida de productos por venta.</p>
+        </a>
+    </div>
+
+    <!-- Inventario actual -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden max-w-4xl mx-auto">
+        <h3 class="text-xl font-bold text-amber-900 px-6 py-4">Inventario Actual</h3>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-amber-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Producto</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Stock</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Precio Compra</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">Precio Venta</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for producto in productos %}
+                <tr class="hover:bg-gray-50 transition duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ producto.nombre }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ producto.stock }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ producto.precio_compra|floatformat:2 }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ producto.precio_venta|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No hay productos registrados</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
