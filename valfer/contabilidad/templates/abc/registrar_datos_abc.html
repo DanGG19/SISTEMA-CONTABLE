@@ -1,0 +1,89 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Registrar Datos ABC{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h2 class="text-3xl font-extrabold text-amber-800 mb-6">📋 Registro de Datos ABC</h2>
+
+    <form method="post" class="bg-white p-6 rounded shadow space-y-4">
+        {% csrf_token %}
+
+        <!-- Conceptos -->
+        <h3 class="text-lg font-bold text-amber-800 mb-2">Conceptos</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <label class="flex flex-col text-sm font-semibold text-gray-700">
+                Producto:
+                <select name="producto" required class="border border-gray-300 rounded p-2">
+                    <option value="">Seleccionar producto</option>
+                    {% for p in productos %}
+                        <option value="{{ p.id }}">{{ p.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label class="flex flex-col text-sm font-semibold text-gray-700">
+                Actividad:
+                <select name="actividad" required class="border border-gray-300 rounded p-2">
+                    <option value="">Seleccionar actividad</option>
+                    {% for a in actividades %}
+                        <option value="{{ a.id }}">{{ a.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label class="flex flex-col text-sm font-semibold text-gray-700">
+                Producción (Cantidad de unidades):
+                <input type="number" name="cantidad_producida" required class="border border-gray-300 rounded p-2">
+            </label>
+        </div>
+
+        <!-- Costos Indirectos -->
+        <h3 class="text-lg font-bold text-amber-800 mb-2">Costos Indirectos</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="flex flex-col text-sm font-semibold text-gray-700">
+                Consumo de la Actividad (Unidades, ej. hr-máq):
+                <input type="number" step="0.01" name="cantidad_consumo" required class="border border-gray-300 rounded p-2">
+            </label>
+
+            <label class="flex flex-col text-sm font-semibold text-gray-700">
+                Valor del Consumo ($):
+                <input type="number" step="0.01" name="valor_consumo" placeholder="Se calcula automáticamente" class="border border-gray-300 rounded p-2 bg-gray-100 cursor-not-allowed" readonly>
+            </label>
+        </div>
+
+        <!-- Costos Directos -->
+        <h3 class="text-lg font-bold text-amber-800 mb-2">Costos Directos</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <label class="flex flex-col text-sm font-semibold text-gray-700">
+                Mano de Obra Directa ($):
+                <input type="number" step="0.01" name="mano_obra" required class="border border-gray-300 rounded p-2">
+            </label>
+
+            <label class="flex flex-col text-sm font-semibold text-gray-700">
+                Materia Prima Directa ($):
+                <input type="number" step="0.01" name="materia_prima" required class="border border-gray-300 rounded p-2">
+            </label>
+
+            <label class="flex flex-col text-sm font-semibold text-gray-700">
+                Limpieza y Mantenimiento de Moldes ($):
+                <input type="number" step="0.01" name="limpieza_moldes" required class="border border-gray-300 rounded p-2">
+            </label>
+        </div>
+
+        <!-- Botón Guardar -->
+        <div class="mt-6 flex items-center gap-4">
+            <button type="submit" class="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-600">
+                💾 Guardar Datos
+            </button>
+
+            <!-- Botón para ir al resumen de actividades ABC -->
+            <a href="{% url 'calcular_costos_abc' %}" class="bg-amber-600 text-white px-6 py-2 rounded hover:bg-amber-500 transition">
+                📊 Ver Resumen ABC
+            </a>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-4">* Todos los montos están expresados en dólares ($).</p>
+    </form>
+</div>
+{% endblock %}

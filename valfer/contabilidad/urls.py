@@ -46,12 +46,10 @@ urlpatterns = [
     path('producto/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
     path('producto/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
 
-    #Rutas para ABC
-    path('abc/actividades/', views.actividades, name='actividades'),
-    path('abc/centros/', views.centros_costo, name='centros_costo'),
-    path('abc/asignaciones/', views.asignaciones_abc, name='asignaciones_abc'),
-
-
+    # Rutas para el módulo ABC
+    path('costos-abc/', views.calcular_costos_abc, name='calcular_costos_abc'),
+    path('registrar-datos-abc/', views.registrar_datos_abc, name='registrar_datos_abc'),
+    path('actividades/', views.registrar_actividades, name='actividades'),
 
 
 ]

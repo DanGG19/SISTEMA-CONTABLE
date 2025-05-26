@@ -61,21 +61,22 @@
     </a>
     <a href="{% url 'actividades' %}"
         class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
-        <h3 class="font-bold text-lg text-amber-800">🎯 Actividades ABC</h3>
-        <p class="text-sm text-gray-600">Registrar actividades clave del negocio para análisis de costos.</p>
+        <h3 class="font-bold text-lg text-amber-800">🏗️ Actividades ABC</h3>
+        <p class="text-sm text-gray-600">Registrar las actividades clave para el costeo ABC.</p>
+    </a>
+    <a href="{% url 'calcular_costos_abc' %}"
+        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">📦 Calcular Costos ABC</h3>
+        <p class="text-sm text-gray-600">Generar el resumen de costos ABC, incluyendo asignaciones, directos e
+            indirectos.</p>
+    </a>
+    <a href="{% url 'registrar_datos_abc' %}"
+        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">📝 Registrar Datos ABC</h3>
+        <p class="text-sm text-gray-600">Ingresar asignaciones de actividades, costos directos y cantidades producidas.
+        </p>
     </a>
 
-    <a href="{% url 'centros_costo' %}"
-        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
-        <h3 class="font-bold text-lg text-amber-800">🏢 Centros de Costo</h3>
-        <p class="text-sm text-gray-600">Definir centros de costo para análisis ABC.</p>
-    </a>
-
-    <a href="{% url 'asignaciones_abc' %}"
-        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
-        <h3 class="font-bold text-lg text-amber-800">📊 Asignaciones ABC</h3>
-        <p class="text-sm text-gray-600">Asignar costos a actividades y centros de costo para análisis ABC.</p>
-    </a>
 
 
 </div>

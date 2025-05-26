@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseNotAllowed
 from datetime import datetime
 from django.db.models import Sum
-from django.utils.timezone import now
+from django.utils.timezone import now, timezone
 from decimal import Decimal
 from datetime import date
 from calendar import monthrange
@@ -933,57 +933,183 @@ def cierre_contable(request):
     })
 
 
+MESES_CHOICES_DICT = {
+    '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+    '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+    '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre',
+}
 
-# ACTIVIDADES
-def actividades(request):
-    actividades = Actividad.objects.all().order_by('nombre')
+MESES_CHOICES_LIST = list(MESES_CHOICES_DICT.items())
+ANIOS_CHOICES_LIST = [(str(y), str(y)) for y in range(2020, 2031)]  
+
+def calcular_costos_abc(request):
+    # Obtener parámetros de filtro
+    mes = request.GET.get('mes', '').strip()
+    anio = request.GET.get('anio', '').strip()
+
+    # Filtrar actividades
+    actividades = Actividad.objects.all()
+    if mes:
+        actividades = actividades.filter(mes=mes)
+    if anio:
+        actividades = actividades.filter(anio=anio)
+
+    # Calcular base de asignación y tasa
+    asignaciones = AsignacionActividad.objects.filter(actividad__in=actividades)
+    base_asignacion = asignaciones.aggregate(total=Sum('cantidad_consumo'))['total'] or 0
+    actividad = actividades.first()
+    tasa_asignacion = actividad.costo_total / base_asignacion if actividad and base_asignacion else 0
+
+    # Actualizar valor de consumo en asignaciones
+    for a in asignaciones:
+        a.valor_consumo = (a.cantidad_consumo or 0) * tasa_asignacion
+        a.save()
+
+    # Procesar productos
+    resultados = []
+    for producto in Producto.objects.all():
+        asignaciones_producto = asignaciones.filter(producto=producto)
+        total_indirectos = sum(a.valor_consumo or 0 for a in asignaciones_producto)
+        try:
+            directos = CostoDirecto.objects.get(producto=producto)
+            total_directos = (directos.mano_obra_directa or 0) + (directos.materia_prima_directa or 0) + (directos.limpieza_moldes or 0)
+        except CostoDirecto.DoesNotExist:
+            total_directos = 0
+            directos = None
+        try:
+            resumen = CostoTotalProducto.objects.get(producto=producto)
+            cantidad_producida = resumen.cantidad_producida
+        except CostoTotalProducto.DoesNotExist:
+            cantidad_producida = 1
+        costo_unitario = (total_indirectos + total_directos) / cantidad_producida if cantidad_producida else 0
+        CostoTotalProducto.objects.update_or_create(
+            producto=producto,
+            defaults={
+                'costo_indirecto': total_indirectos,
+                'costo_directo': total_directos,
+                'costo_total': total_indirectos + total_directos,
+                'costo_unitario': costo_unitario,
+            }
+        )
+        resultados.append({
+            'producto': producto,
+            'cantidad_producida': cantidad_producida,
+            'cantidad_consumo': sum(a.cantidad_consumo or 0 for a in asignaciones_producto),
+            'costo_indirecto': total_indirectos,
+            'mano_obra': directos.mano_obra_directa if directos else 0,
+            'materia_prima': directos.materia_prima_directa if directos else 0,
+            'limpieza_moldes': directos.limpieza_moldes if directos else 0,
+            'costo_directo': total_directos,
+            'costo_total': total_indirectos + total_directos,
+            'costo_unitario': costo_unitario,
+        })
+
+    # Mensaje de periodo
+    if mes and anio:
+        periodo = f"{MESES_CHOICES_DICT.get(mes, '')} {anio}"
+    elif anio:
+        periodo = f"Año {anio} (sin mes)"
+    elif mes:
+        periodo = f"{MESES_CHOICES_DICT.get(mes, '')} (sin año)"
+    else:
+        periodo = "Todos los datos (sin filtro de Mes/Año)"
+
+    return render(request, 'abc/resumen_costos.html', {
+        'actividad': actividad,
+        'base_asignacion': base_asignacion,
+        'tasa_asignacion': tasa_asignacion,
+        'resultados': resultados,
+        'MESES_CHOICES_LIST': MESES_CHOICES_LIST,
+        'ANIOS_CHOICES_LIST': ANIOS_CHOICES_LIST,
+        'mes': mes,
+        'anio': anio,
+        'periodo': periodo,
+    })
+
+
+def registrar_datos_abc(request):
+    productos = Producto.objects.all()
+    actividades = Actividad.objects.all()
+
+    if request.method == 'POST':
+        # Obtener datos del formulario
+        producto_id = request.POST.get('producto')
+        actividad_id = request.POST.get('actividad')
+        cantidad_consumo = float(request.POST.get('cantidad_consumo') or 0)
+        mano_obra = float(request.POST.get('mano_obra') or 0)
+        materia_prima = float(request.POST.get('materia_prima') or 0)
+        limpieza_moldes = float(request.POST.get('limpieza_moldes') or 0)
+        cantidad_producida = int(request.POST.get('cantidad_producida') or 0)
+
+        try:
+            producto = Producto.objects.get(id=producto_id)
+            actividad = Actividad.objects.get(id=actividad_id)
+
+            # Guardar AsignacionActividad
+            asignacion, created = AsignacionActividad.objects.update_or_create(
+                producto=producto,
+                actividad=actividad,
+                defaults={'cantidad_consumo': cantidad_consumo}
+            )
+
+            # Guardar CostoDirecto
+            costo_directo, created = CostoDirecto.objects.update_or_create(
+                producto=producto,
+                defaults={
+                    'mano_obra_directa': mano_obra,
+                    'materia_prima_directa': materia_prima,
+                    'limpieza_moldes': limpieza_moldes
+                }
+            )
+
+            # Guardar o actualizar cantidad_producida en CostoTotalProducto (no calculamos aquí los costos finales)
+            resumen, created = CostoTotalProducto.objects.get_or_create(
+                producto=producto,
+                defaults={
+                    'costo_indirecto': 0,
+                    'costo_directo': 0,
+                    'costo_total': 0,
+                    'costo_unitario': 0,
+                    'cantidad_producida': cantidad_producida
+                }
+            )
+            # Si ya existía, actualiza la cantidad_producida
+            if not created:
+                resumen.cantidad_producida = cantidad_producida
+                resumen.save()
+
+            messages.success(request, 'Datos registrados correctamente.')
+            return redirect('registrar_datos_abc')
+
+        except Exception as e:
+            messages.error(request, f'Ocurrió un error: {e}')
+
+    return render(request, 'abc/registrar_datos_abc.html', {
+        'productos': productos,
+        'actividades': actividades
+    })
+
+def registrar_actividades(request):
+    actividades = Actividad.objects.all()
 
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
-        descripcion = request.POST.get('descripcion', '')
-        Actividad.objects.create(nombre=nombre, descripcion=descripcion)
+        unidad = request.POST.get('unidad_medida')
+        costo = request.POST.get('costo_total')
+        mes = request.POST.get('mes')
+        anio = request.POST.get('anio')
+
+        Actividad.objects.create(
+            nombre=nombre,
+            unidad_medida=unidad,
+            costo_total=costo,
+            mes=mes,
+            anio=anio
+        )
         return redirect('actividades')
 
-    return render(request, 'abc/actividades.html', {'actividades': actividades})
-
-# CENTROS DE COSTO
-def centros_costo(request):
-    centros = CentroCosto.objects.all().order_by('nombre')
-
-    if request.method == 'POST':
-        nombre = request.POST.get('nombre')
-        descripcion = request.POST.get('descripcion', '')
-        CentroCosto.objects.create(nombre=nombre, descripcion=descripcion)
-        return redirect('centros_costo')
-
-    return render(request, 'abc/centros_costo.html', {'centros': centros})
-
-
-# ASIGNACIONES ABC
-def asignaciones_abc(request):
-    actividades = Actividad.objects.all()
-    centros = CentroCosto.objects.all()
-    asignaciones = AsignacionABC.objects.all().order_by('-fecha')
-
-    if request.method == 'POST':
-        actividad_id = request.POST.get('actividad')
-        centro_id = request.POST.get('centro_costo')
-        monto = request.POST.get('monto')
-        fecha = request.POST.get('fecha') or timezone.now().date()
-
-        actividad = Actividad.objects.get(id=actividad_id)
-        centro = CentroCosto.objects.get(id=centro_id)
-
-        AsignacionABC.objects.create(
-            actividad=actividad,
-            centro_costo=centro,
-            monto=monto,
-            fecha=fecha
-        )
-        return redirect('asignaciones_abc')
-
-    return render(request, 'abc/asignaciones_abc.html', {
-        'asignaciones': asignaciones,
+    return render(request, 'abc/actividades.html', {
         'actividades': actividades,
-        'centros': centros
+        'MESES_CHOICES_LIST': MESES_CHOICES_LIST,
+        'ANIOS_CHOICES_LIST': ANIOS_CHOICES_LIST,
     })
