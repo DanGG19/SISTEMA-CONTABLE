@@ -15,7 +15,8 @@
         <h3 class="font-bold text-lg text-amber-800">📝 Registrar Asientos</h3>
         <p class="text-sm text-gray-600">Ingresar transacciones contables.</p>
     </a>
-    <a href="{% url 'crear_ajuste' %}" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+    <a href="{% url 'crear_ajuste' %}"
+        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
         <h3 class="font-bold text-lg text-amber-800">🛠️ Registrar Ajuste Contable</h3>
         <p class="text-sm text-gray-600">Registrar ajustes manuales en las cuentas contables.</p>
     </a>
@@ -23,22 +24,31 @@
         <h3 class="font-bold text-lg text-amber-800">👥 Planillas</h3>
         <p class="text-sm text-gray-600">Gestionar empleados y pagos de planilla.</p>
     </a>
-    <a href="/estados-financieros/balance/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+    <a href="/estados-financieros/balance/"
+        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
         <h3 class="font-bold text-lg text-amber-800">📊 Balance General</h3>
         <p class="text-sm text-gray-600">Generar el Balance General para un periodo.</p>
     </a>
-    <a href="/estados-financieros/listar-balances/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+    <a href="/estados-financieros/listar-balances/"
+        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
         <h3 class="font-bold text-lg text-amber-800">📚 Balances Guardados</h3>
         <p class="text-sm text-gray-600">Ver historial de balances generados.</p>
     </a>
-    <a href="/estados-financieros/resultado/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+    <a href="/estados-financieros/resultado/"
+        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
         <h3 class="font-bold text-lg text-amber-800">📈 Estado de Resultados</h3>
         <p class="text-sm text-gray-600">Generar el Estado de Resultados por periodo.</p>
     </a>
-    <a href="/estados-financieros/listar-resultados/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+    <a href="/estados-financieros/listar-resultados/"
+        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
         <h3 class="font-bold text-lg text-amber-800">📂 Resultados Guardados</h3>
         <p class="text-sm text-gray-600">Ver historial de estados de resultados.</p>
     </a>
+    <a href="{% url 'cierre_contable' %}"
+        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">🔒 Cierre Contable</h3>
+        <p class="text-sm text-gray-600">Realizar el cierre anual de las cuentas de resultados.</p>
+    </a>
+
 </div>
 {% endblock %}
-    

@@ -1,0 +1,63 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Cierre Contable{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h2 class="text-3xl font-extrabold text-amber-800 mb-6">🔒 Generar Cierre Contable</h2>
+
+    <form method="get" class="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end mb-6">
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Año a Cerrar:
+            <input type="number" name="anio" value="{{ anio }}" min="2000" max="2100"
+                class="border border-gray-300 rounded p-1">
+        </label>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Consultar</button>
+    </form>
+
+    {% if total_ingresos or total_gastos %}
+    <div class="bg-white shadow rounded p-4 mb-4">
+        <h3 class="text-lg font-bold text-amber-800 mb-2">Resumen del Año {{ anio }}</h3>
+        <ul class="text-sm text-gray-700 space-y-2">
+            <li>💰 <strong>Total Ingresos:</strong> {{ total_ingresos|floatformat:2 }}</li>
+            <li>💸 <strong>Total Gastos:</strong> {{ total_gastos|floatformat:2 }}</li>
+            <li>📊 <strong>Utilidad Neta:</strong> {{ utilidad|floatformat:2 }}</li>
+        </ul>
+    </div>
+
+    <form method="post" id="cierre-form" class="text-right">
+        {% csrf_token %}
+        <button type="button" onclick="confirmarCierre()"
+            class="bg-amber-700 text-white px-4 py-2 rounded hover:bg-amber-600">
+            💾 Generar Asiento de Cierre Contable
+        </button>
+    </form>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function confirmarCierre() {
+        Swal.fire({
+            title: '⚠️ ¿Generar Cierre Contable?',
+            html: `
+                <p>Se cerrarán las cuentas de ingresos, gastos y costos del año <strong>{{ anio }}</strong>.</p>
+                <p>El saldo neto será trasladado a la cuenta de <strong>Resultados Acumulados</strong>.</p>
+                <p><em>Este proceso es irreversible.</em></p>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, generar cierre',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('cierre-form').submit();
+            }
+        });
+    }
+</script>
+
+
+    {% endif %}
+</div>
+{% endblock %}

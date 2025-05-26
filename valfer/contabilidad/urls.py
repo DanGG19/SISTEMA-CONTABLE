@@ -12,7 +12,7 @@ urlpatterns = [
     path('asientos/<int:asiento_id>/eliminar/', views.eliminar_asiento, name='eliminar_asiento'),
     path('iva/calcular/', views.calcular_iva, name='calcular_iva'),
     path('ajustes/nuevo/', views.crear_ajuste, name='crear_ajuste'),
-
+    path('cierre-contable/', views.cierre_contable, name='cierre_contable'),
 
     # Rutas para Planillas
     path('planillas/crear/', crear_planilla, name='crear_planilla'),
@@ -27,7 +27,6 @@ urlpatterns = [
     path('estados-financieros/resultado/', views.estado_resultados, name='estado_resultados'),
     path('estados-financieros/listar-resultados/', views.listar_resultados, name='listar_resultados'),
     path('estados-financieros/listar-resultados/resultados/<int:resultado_id>/', views.ver_resultado, name='ver_resultado'),
-
 
     #Inventario Perpetuo
     path('inventario/compras/registrar/', views.registrar_movimiento, {'tipo': 'compra'}, name='registrar_compra'),

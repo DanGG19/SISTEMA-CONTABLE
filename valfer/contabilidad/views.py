@@ -693,3 +693,128 @@ def eliminar_producto(request, pk):
     return render(request, 'inventario/eliminar_producto.html', {'producto': producto})
 
 
+#View para cierre contable
+def cierre_contable(request):
+    anio = int(request.GET.get('anio', date.today().year))
+    fecha_cierre = date(anio, 12, 31)
+
+    detalles = DetalleAsiento.objects.filter(fecha__year=anio)
+    cuentas_ingresos = CuentaContable.objects.filter(tipo='ingreso')
+    cuentas_gastos = CuentaContable.objects.filter(tipo__in=['gasto', 'costo'])
+
+    total_ingresos = 0
+    total_gastos = 0
+
+    for cuenta in cuentas_ingresos:
+        saldo = detalles.filter(cuenta=cuenta).aggregate(
+            debe=Sum('debe') or 0,
+            haber=Sum('haber') or 0
+        )
+        total_ingresos += (saldo['haber'] or 0) - (saldo['debe'] or 0)
+
+    for cuenta in cuentas_gastos:
+        saldo = detalles.filter(cuenta=cuenta).aggregate(
+            debe=Sum('debe') or 0,
+            haber=Sum('haber') or 0
+        )
+        total_gastos += (saldo['debe'] or 0) - (saldo['haber'] or 0)
+
+    resultado_ejercicio = total_ingresos - total_gastos
+
+    if request.method == 'POST':
+        asiento = AsientoContable.objects.create(
+            fecha=fecha_cierre,
+            descripcion=f"Cierre Contable del Ejercicio {anio}"
+        )
+
+        cuenta_pyg = CuentaContable.objects.get(codigo='6101.01')  # Pérdidas y Ganancias
+        cuenta_utilidad = CuentaContable.objects.get(codigo='310401')  # Utilidad del Ejercicio
+        cuenta_perdida = CuentaContable.objects.get(codigo='310402')  # Pérdida del Ejercicio
+
+        # Cerrar Ingresos → PYG
+        for cuenta in cuentas_ingresos:
+            saldo = detalles.filter(cuenta=cuenta).aggregate(
+                debe=Sum('debe') or 0,
+                haber=Sum('haber') or 0
+            )
+            saldo_ingreso = (saldo['haber'] or 0) - (saldo['debe'] or 0)
+            if saldo_ingreso != 0:
+                DetalleAsiento.objects.create(
+                    asiento=asiento,
+                    fecha=fecha_cierre,
+                    cuenta=cuenta,
+                    debe=saldo_ingreso,
+                    haber=0
+                )
+                DetalleAsiento.objects.create(
+                    asiento=asiento,
+                    fecha=fecha_cierre,
+                    cuenta=cuenta_pyg,
+                    debe=0,
+                    haber=saldo_ingreso
+                )
+
+        # Cerrar Gastos → PYG
+        for cuenta in cuentas_gastos:
+            saldo = detalles.filter(cuenta=cuenta).aggregate(
+                debe=Sum('debe') or 0,
+                haber=Sum('haber') or 0
+            )
+            saldo_gasto = (saldo['debe'] or 0) - (saldo['haber'] or 0)
+            if saldo_gasto != 0:
+                DetalleAsiento.objects.create(
+                    asiento=asiento,
+                    fecha=fecha_cierre,
+                    cuenta=cuenta_pyg,
+                    debe=saldo_gasto,
+                    haber=0
+                )
+                DetalleAsiento.objects.create(
+                    asiento=asiento,
+                    fecha=fecha_cierre,
+                    cuenta=cuenta,
+                    debe=0,
+                    haber=saldo_gasto
+                )
+
+        # Trasladar saldo de PYG a Utilidad/Pérdida
+        if resultado_ejercicio > 0:
+            DetalleAsiento.objects.create(
+                asiento=asiento,
+                fecha=fecha_cierre,
+                cuenta=cuenta_pyg,
+                debe=resultado_ejercicio,
+                haber=0
+            )
+            DetalleAsiento.objects.create(
+                asiento=asiento,
+                fecha=fecha_cierre,
+                cuenta=cuenta_utilidad,
+                debe=0,
+                haber=resultado_ejercicio
+            )
+        elif resultado_ejercicio < 0:
+            DetalleAsiento.objects.create(
+                asiento=asiento,
+                fecha=fecha_cierre,
+                cuenta=cuenta_perdida,
+                debe=abs(resultado_ejercicio),
+                haber=0
+            )
+            DetalleAsiento.objects.create(
+                asiento=asiento,
+                fecha=fecha_cierre,
+                cuenta=cuenta_pyg,
+                debe=0,
+                haber=abs(resultado_ejercicio)
+            )
+
+        messages.success(request, f"✅ Cierre Contable del Ejercicio {anio} realizado correctamente. Todas las cuentas de resultados han sido cerradas.")
+        return redirect('listar_asientos')
+
+    return render(request, 'contabilidad/cierre_contable.html', {
+        'anio': anio,
+        'total_ingresos': total_ingresos,
+        'total_gastos': total_gastos,
+        'utilidad': resultado_ejercicio,
+    })
