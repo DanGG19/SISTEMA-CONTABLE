@@ -103,6 +103,61 @@ def eliminar_asiento(request, asiento_id):
             return JsonResponse({'success': False, 'error': str(e)})
     return HttpResponseNotAllowed(['POST'])
 
+
+#View para Libro Mayor
+def libro_mayor(request):
+    anio = int(request.GET.get('anio', date.today().year))
+    cuenta_id = request.GET.get('cuenta')
+
+    cuentas = CuentaContable.objects.all().order_by('codigo')
+    cuentas_con_saldo = []
+    movimientos = []
+    saldo_acumulado = 0
+
+    if cuenta_id:
+        # Modo Detalle: Mostrar movimientos de la cuenta seleccionada
+        cuenta = CuentaContable.objects.get(id=cuenta_id)
+        detalles = DetalleAsiento.objects.filter(cuenta=cuenta, fecha__year=anio).order_by('fecha', 'id')
+
+        for detalle in detalles:
+            debe = detalle.debe or 0
+            haber = detalle.haber or 0
+            saldo_acumulado += (debe - haber)
+            movimientos.append({
+                'fecha': detalle.fecha,
+                'descripcion': detalle.asiento.descripcion,
+                'debe': debe,
+                'haber': haber,
+                'saldo_parcial': saldo_acumulado
+            })
+
+        return render(request, 'contabilidad/libro_mayor.html', {
+            'cuentas': cuentas,
+            'cuenta_seleccionada': cuenta,
+            'movimientos': movimientos,
+            'anio': anio,
+            'saldo_final': saldo_acumulado,
+        })
+
+    else:
+        # Modo Resumen: Mostrar cuentas con saldo ≠ 0
+        for cuenta in cuentas:
+            detalles = DetalleAsiento.objects.filter(cuenta=cuenta, fecha__year=anio)
+            saldo = detalles.aggregate(
+                debe=Sum('debe') or 0,
+                haber=Sum('haber') or 0
+            )
+            saldo_final = (saldo['debe'] or 0) - (saldo['haber'] or 0)
+            if saldo_final != 0:
+                cuentas_con_saldo.append({'cuenta': cuenta, 'saldo': saldo_final})
+
+        return render(request, 'contabilidad/libro_mayor.html', {
+            'cuentas': cuentas,
+            'cuentas_con_saldo': cuentas_con_saldo,
+            'anio': anio,
+        })
+    
+
 # Crear planilla
 
 def calcular_detalle_planilla(empleado, dias_trabajados):

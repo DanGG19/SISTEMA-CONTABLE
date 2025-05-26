@@ -13,6 +13,8 @@ urlpatterns = [
     path('iva/calcular/', views.calcular_iva, name='calcular_iva'),
     path('ajustes/nuevo/', views.crear_ajuste, name='crear_ajuste'),
     path('cierre-contable/', views.cierre_contable, name='cierre_contable'),
+    path('libro-mayor/', views.libro_mayor, name='libro_mayor'),
+    
 
     # Rutas para Planillas
     path('planillas/crear/', crear_planilla, name='crear_planilla'),
