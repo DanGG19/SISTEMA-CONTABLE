@@ -126,7 +126,7 @@ def crear_planilla(request):
     return render(request, 'planillas/crear_planilla.html', {'form': form})
 
 
-
+from .models import AsientoContable, DetalleAsiento, CuentaContable
 
 def agregar_detalles(request, planilla_id):
     planilla = Planilla.objects.get(id=planilla_id)
@@ -139,7 +139,7 @@ def agregar_detalles(request, planilla_id):
 
         salario, afp, renta, total = calcular_detalle_planilla(empleado, dias)
 
-        DetallePlanilla.objects.create(
+        detalle = DetallePlanilla.objects.create(
             planilla=planilla,
             empleado=empleado,
             dias_trabajados=dias,
@@ -148,13 +148,52 @@ def agregar_detalles(request, planilla_id):
             renta=renta,
             total_pagado=total
         )
-        messages.success(request, 'Detalle agregado')
+
+        # 🧾 Crear el asiento contable automáticamente
+        try:
+            cuenta_salarios = CuentaContable.objects.get(codigo='4103.02.01')  # Salarios
+            cuenta_caja = CuentaContable.objects.get(codigo='1101.01')  # Caja (puedes ajustar la cuenta de pago)
+        except CuentaContable.DoesNotExist:
+            messages.error(request, "No se encontraron las cuentas contables requeridas.")
+            return redirect('agregar_detalles', planilla_id=planilla.id)
+
+        # Crear el asiento principal
+        descripcion_asiento = f"Registro de salario para {empleado.nombre} ({planilla.get_mes_display()} {planilla.anio})"
+        asiento = AsientoContable.objects.create(
+            fecha=planilla.creada_en.date(),
+            descripcion=descripcion_asiento
+        )
+
+        # Detalle 1: Debitar gastos (salarios)
+        DetalleAsiento.objects.create(
+            asiento=asiento,
+            fecha=planilla.creada_en.date(),
+            cuenta=cuenta_salarios,
+            debe=salario,
+            haber=0,
+            descripcion=f"Salario de {empleado.nombre}"
+        )
+
+        # Detalle 2: Acreditar caja (simulamos el pago inmediato, o puedes usar cuentas por pagar)
+        DetalleAsiento.objects.create(
+            asiento=asiento,
+            fecha=planilla.creada_en.date(),
+            cuenta=cuenta_caja,
+            debe=0,
+            haber=salario,
+            descripcion=f"Pago de salario a {empleado.nombre}"
+        )
+
+        # Relacionar asiento a detalle 
+        messages.success(request, f"Detalle agregado para {empleado.nombre} y asiento contable creado.")
+
         return redirect('agregar_detalles', planilla_id=planilla.id)
 
     return render(request, 'contabilidad/agregar_detalles.html', {
         'planilla': planilla,
         'empleados': empleados
     })
+
 
 def ver_planilla(request, planilla_id):
     planilla = Planilla.objects.get(id=planilla_id)
