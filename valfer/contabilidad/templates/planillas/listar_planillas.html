@@ -20,17 +20,13 @@
             {% for planilla in planillas %}
             <tr class="border-b hover:bg-gray-50">
                 <td class="p-2">{{ planilla.id }}</td>
-                <td class="p-2">{{ planilla.get_mes_display }} {{ planilla.anio }}
-</td>
+                <td class="p-2">{{ planilla.get_mes_display }} {{ planilla.anio }}</td>
                 <td class="p-2">{{ planilla.descripcion }}</td>
                 <td class="p-2">{{ planilla.creada_en|date:"d/m/Y H:i" }}</td>
                 <td class="p-2 text-center space-x-2">
-                    <a href="{% url 'ver_planilla' planilla.id %}" class="text-blue-600 hover:underline">Ver</a>
-                    <a onclick="confirmarEliminacion('{{ planilla.id }}')"
-                        class="text-red-600 hover:underline font-semibold">Eliminar</a>
+                    <a href="{% url 'ver_planilla' planilla.id %}" class="text-blue-600 hover:underline font-semibold">Ver</a>
+                    <a href="javascript:void(0);" onclick="confirmarEliminacion('{{ planilla.id }}')" class="text-red-600 hover:underline font-semibold">Eliminar</a>
                 </td>
-
-                
             </tr>
             {% empty %}
             <tr>
@@ -66,5 +62,4 @@ function confirmarEliminacion(planillaId) {
     });
 }
 </script>
-
 {% endblock %}

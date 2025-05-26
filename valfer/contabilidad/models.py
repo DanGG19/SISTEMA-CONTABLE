@@ -73,8 +73,11 @@ class DetallePlanilla(models.Model):
     dias_trabajados = models.IntegerField()
     salario = models.DecimalField(max_digits=10, decimal_places=2)
     afp = models.DecimalField(max_digits=10, decimal_places=2)
-    renta = models.DecimalField(max_digits=10, decimal_places=2)
+    isss = models.DecimalField(max_digits=10, decimal_places=2)
     total_pagado = models.DecimalField(max_digits=10, decimal_places=2)
+    total_costo_empleador = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+
 
 #MOdelo para el balance general
 class BalanceGeneral(models.Model):

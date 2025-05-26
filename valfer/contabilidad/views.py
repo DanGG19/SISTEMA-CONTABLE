@@ -108,10 +108,19 @@ def eliminar_asiento(request, asiento_id):
 def calcular_detalle_planilla(empleado, dias_trabajados):
     salario_diario = empleado.salario_base / Decimal(30)
     salario = salario_diario * Decimal(dias_trabajados)
-    afp = salario * Decimal('0.0725')  # 7.25%
-    renta = salario * Decimal('0.10')  # 10%
-    total_pagado = salario - afp - renta
-    return salario, afp, renta, total_pagado
+
+    # Aportes patronales
+    afp_patronal = salario * Decimal('0.0775')
+    isss_patronal = salario * Decimal('0.075')
+
+    total_costo_empleador = salario + afp_patronal + isss_patronal
+
+    # Total pagado al empleado = salario (sin descuentos)
+    total_pagado = salario
+
+    return salario, afp_patronal, isss_patronal, total_costo_empleador, total_pagado
+
+
 
 
 def crear_planilla(request):
@@ -125,11 +134,19 @@ def crear_planilla(request):
     
     return render(request, 'planillas/crear_planilla.html', {'form': form})
 
+def calcular_detalle_planilla(empleado, dias_trabajados):
+    salario_diario = empleado.salario_base / Decimal(30)
+    salario = salario_diario * Decimal(dias_trabajados)
 
-from .models import AsientoContable, DetalleAsiento, CuentaContable
+    afp_patronal = salario * Decimal('0.0775')
+    isss_patronal = salario * Decimal('0.075')
+    total_costo_empleador = salario + afp_patronal + isss_patronal
+    total_pagado = salario  # El empleado recibe el salario sin retenciones
+
+    return salario, afp_patronal, isss_patronal, total_costo_empleador, total_pagado
 
 def agregar_detalles(request, planilla_id):
-    planilla = Planilla.objects.get(id=planilla_id)
+    planilla = get_object_or_404(Planilla, id=planilla_id)
     empleados = Empleado.objects.all()
     
     if request.method == 'POST':
@@ -137,63 +154,82 @@ def agregar_detalles(request, planilla_id):
         dias = int(request.POST.get('dias_trabajados'))
         empleado = Empleado.objects.get(id=empleado_id)
 
-        salario, afp, renta, total = calcular_detalle_planilla(empleado, dias)
+        salario, afp_patronal, isss_patronal, total_costo_empleador, total_pagado = calcular_detalle_planilla(empleado, dias)
 
         detalle = DetallePlanilla.objects.create(
             planilla=planilla,
             empleado=empleado,
             dias_trabajados=dias,
             salario=salario,
-            afp=afp,
-            renta=renta,
-            total_pagado=total
+            afp_patronal=afp_patronal,
+            isss_patronal=isss_patronal,
+            total_costo_empleador=total_costo_empleador,
+            total_pagado=total_pagado
         )
 
-        # 🧾 Crear el asiento contable automáticamente
+        # 🧾 Crear asiento contable
         try:
-            cuenta_salarios = CuentaContable.objects.get(codigo='4103.02.01')  # Salarios
-            cuenta_caja = CuentaContable.objects.get(codigo='1101.01')  # Caja (puedes ajustar la cuenta de pago)
+            cuenta_salarios = CuentaContable.objects.get(codigo='4103.01.01')  # Salarios
+            cuenta_afp = CuentaContable.objects.get(codigo='4103.01.09')  # AFP Patronal
+            cuenta_isss = CuentaContable.objects.get(codigo='4103.01.08')  # ISSS Patronal
+            cuenta_caja = CuentaContable.objects.get(codigo='1101.01')  # Caja o Bancos
         except CuentaContable.DoesNotExist:
             messages.error(request, "No se encontraron las cuentas contables requeridas.")
             return redirect('agregar_detalles', planilla_id=planilla.id)
 
-        # Crear el asiento principal
-        descripcion_asiento = f"Registro de salario para {empleado.nombre} ({planilla.get_mes_display()} {planilla.anio})"
+        descripcion_asiento = f"Asiento Planilla {planilla.get_mes_display()} {planilla.anio} - {empleado.nombre}"
         asiento = AsientoContable.objects.create(
             fecha=planilla.creada_en.date(),
             descripcion=descripcion_asiento
         )
 
-        # Detalle 1: Debitar gastos (salarios)
+        # Débito: Salario base
         DetalleAsiento.objects.create(
             asiento=asiento,
             fecha=planilla.creada_en.date(),
             cuenta=cuenta_salarios,
             debe=salario,
             haber=0,
-            descripcion=f"Salario de {empleado.nombre}"
+            descripcion=f"Salario {empleado.nombre}"
         )
 
-        # Detalle 2: Acreditar caja (simulamos el pago inmediato, o puedes usar cuentas por pagar)
+        # Débito: AFP Patronal
+        DetalleAsiento.objects.create(
+            asiento=asiento,
+            fecha=planilla.creada_en.date(),
+            cuenta=cuenta_afp,
+            debe=afp_patronal,
+            haber=0,
+            descripcion=f"AFP Patronal {empleado.nombre}"
+        )
+
+        # Débito: ISSS Patronal
+        DetalleAsiento.objects.create(
+            asiento=asiento,
+            fecha=planilla.creada_en.date(),
+            cuenta=cuenta_isss,
+            debe=isss_patronal,
+            haber=0,
+            descripcion=f"ISSS Patronal {empleado.nombre}"
+        )
+
+        # Crédito: Caja (o Bancos)
         DetalleAsiento.objects.create(
             asiento=asiento,
             fecha=planilla.creada_en.date(),
             cuenta=cuenta_caja,
             debe=0,
-            haber=salario,
-            descripcion=f"Pago de salario a {empleado.nombre}"
+            haber=salario + afp_patronal + isss_patronal,
+            descripcion=f"Pago planilla {empleado.nombre}"
         )
 
-        # Relacionar asiento a detalle 
-        messages.success(request, f"Detalle agregado para {empleado.nombre} y asiento contable creado.")
-
+        messages.success(request, f"Detalle agregado y asiento contable creado para {empleado.nombre}.")
         return redirect('agregar_detalles', planilla_id=planilla.id)
 
-    return render(request, 'contabilidad/agregar_detalles.html', {
+    return render(request, 'planillas/agregar_detalles.html', {
         'planilla': planilla,
         'empleados': empleados
     })
-
 
 def ver_planilla(request, planilla_id):
     planilla = Planilla.objects.get(id=planilla_id)
@@ -201,7 +237,7 @@ def ver_planilla(request, planilla_id):
 
     total_general = sum(d.total_pagado for d in detalles)
 
-    return render(request, 'contabilidad/ver_planilla.html', {
+    return render(request, 'planillas/ver_planilla.html', {
         'planilla': planilla,
         'detalles': detalles,
         'total_general': total_general,
@@ -210,7 +246,7 @@ def ver_planilla(request, planilla_id):
 
 def listar_planillas(request):
     planillas = Planilla.objects.order_by('-anio', '-mes')  # Ordena por año descendente, luego mes
-    return render(request, 'contabilidad/listar_planillas.html', {'planillas': planillas})
+    return render(request, 'planillas/listar_planillas.html', {'planillas': planillas})
 
 def eliminar_planilla(request, planilla_id):
     planilla = get_object_or_404(Planilla, id=planilla_id)
