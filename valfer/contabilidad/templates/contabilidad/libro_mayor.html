@@ -1,0 +1,105 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Libro Mayor{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl font-extrabold text-amber-800 mb-6">📖 Libro Mayor</h2>
+
+    <form method="get" class="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end mb-6">
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Cuenta:
+            <select name="cuenta" class="border border-gray-300 rounded p-1">
+                <option value="">-- Todas las Cuentas con Saldo --</option>
+                {% for cuenta in cuentas %}
+                    <option value="{{ cuenta.id }}" {% if cuenta_seleccionada and cuenta.id == cuenta_seleccionada.id %}selected{% endif %}>
+                        {{ cuenta.codigo }} - {{ cuenta.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Año:
+            <input type="number" name="anio" value="{{ anio }}" min="2000" max="2100" class="border border-gray-300 rounded p-1">
+        </label>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Consultar</button>
+    </form>
+
+    {% if cuenta_seleccionada %}
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="text-lg font-bold text-amber-800 mb-4">
+            📊 Movimientos de la cuenta: {{ cuenta_seleccionada.codigo }} - {{ cuenta_seleccionada.nombre }}
+        </h3>
+        <table class="w-full text-sm border-collapse border border-gray-300 shadow-md rounded">
+            <thead class="bg-cyan-900 text-white">
+                <tr>
+                    <th class="border px-3 py-2 text-left">Fecha</th>
+                    <th class="border px-3 py-2 text-left">Descripción</th>
+                    <th class="border px-3 py-2 text-right">Debe</th>
+                    <th class="border px-3 py-2 text-right">Haber</th>
+                    <th class="border px-3 py-2 text-right">Saldo Parcial</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in movimientos %}
+                <tr class="hover:bg-amber-50">
+                    <td class="border px-3 py-1">{{ m.fecha }}</td>
+                    <td class="border px-3 py-1">{{ m.descripcion }}</td>
+                    <td class="border px-3 py-1 text-right">{{ m.debe|floatformat:2 }}</td>
+                    <td class="border px-3 py-1 text-right">{{ m.haber|floatformat:2 }}</td>
+                    <td class="border px-3 py-1 text-right {% if m.saldo_parcial > 0 %}text-green-700{% elif m.saldo_parcial < 0 %}text-red-700{% endif %}">
+                        {{ m.saldo_parcial|floatformat:2 }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-gray-500 py-2">No hay movimientos para esta cuenta en el año seleccionado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="font-bold bg-amber-100 text-amber-900">
+                    <td colspan="4" class="text-right border px-3 py-2">Saldo Final</td>
+                    <td class="text-right border px-3 py-2 {% if saldo_final > 0 %}text-green-700{% elif saldo_final < 0 %}text-red-700{% endif %}">
+                        {{ saldo_final|floatformat:2 }}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="text-lg font-bold text-amber-800 mb-4">
+            📂 Resumen de Cuentas con Saldo en {{ anio }}
+        </h3>
+        <table class="w-full text-sm border-collapse border border-gray-300 shadow-md rounded">
+            <thead class="bg-cyan-900 text-white">
+                <tr>
+                    <th class="border px-3 py-2 text-left">Cuenta</th>
+                    <th class="border px-3 py-2 text-right">Saldo Final</th>
+                    <th class="border px-3 py-2 text-center">Ver Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cuentas_con_saldo %}
+                <tr class="hover:bg-amber-50">
+                    <td class="border px-3 py-1">{{ item.cuenta.codigo }} - {{ item.cuenta.nombre }}</td>
+                    <td class="border px-3 py-1 text-right {% if item.saldo > 0 %}text-green-700{% elif item.saldo < 0 %}text-red-700{% endif %}">
+                        {{ item.saldo|floatformat:2 }}
+                    </td>
+                    <td class="border px-3 py-1 text-center">
+                        <a href="?cuenta={{ item.cuenta.id }}&anio={{ anio }}" class="text-blue-600 hover:underline">Ver Detalle</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-gray-500 py-2">No hay cuentas con saldo para este año.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

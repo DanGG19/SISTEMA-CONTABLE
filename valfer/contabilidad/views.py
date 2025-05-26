@@ -103,6 +103,61 @@ def eliminar_asiento(request, asiento_id):
             return JsonResponse({'success': False, 'error': str(e)})
     return HttpResponseNotAllowed(['POST'])
 
+
+#View para Libro Mayor
+def libro_mayor(request):
+    anio = int(request.GET.get('anio', date.today().year))
+    cuenta_id = request.GET.get('cuenta')
+
+    cuentas = CuentaContable.objects.all().order_by('codigo')
+    cuentas_con_saldo = []
+    movimientos = []
+    saldo_acumulado = 0
+
+    if cuenta_id:
+        # Modo Detalle: Mostrar movimientos de la cuenta seleccionada
+        cuenta = CuentaContable.objects.get(id=cuenta_id)
+        detalles = DetalleAsiento.objects.filter(cuenta=cuenta, fecha__year=anio).order_by('fecha', 'id')
+
+        for detalle in detalles:
+            debe = detalle.debe or 0
+            haber = detalle.haber or 0
+            saldo_acumulado += (debe - haber)
+            movimientos.append({
+                'fecha': detalle.fecha,
+                'descripcion': detalle.asiento.descripcion,
+                'debe': debe,
+                'haber': haber,
+                'saldo_parcial': saldo_acumulado
+            })
+
+        return render(request, 'contabilidad/libro_mayor.html', {
+            'cuentas': cuentas,
+            'cuenta_seleccionada': cuenta,
+            'movimientos': movimientos,
+            'anio': anio,
+            'saldo_final': saldo_acumulado,
+        })
+
+    else:
+        # Modo Resumen: Mostrar cuentas con saldo ≠ 0
+        for cuenta in cuentas:
+            detalles = DetalleAsiento.objects.filter(cuenta=cuenta, fecha__year=anio)
+            saldo = detalles.aggregate(
+                debe=Sum('debe') or 0,
+                haber=Sum('haber') or 0
+            )
+            saldo_final = (saldo['debe'] or 0) - (saldo['haber'] or 0)
+            if saldo_final != 0:
+                cuentas_con_saldo.append({'cuenta': cuenta, 'saldo': saldo_final})
+
+        return render(request, 'contabilidad/libro_mayor.html', {
+            'cuentas': cuentas,
+            'cuentas_con_saldo': cuentas_con_saldo,
+            'anio': anio,
+        })
+    
+
 # Crear planilla
 
 def calcular_detalle_planilla(empleado, dias_trabajados):
@@ -875,4 +930,60 @@ def cierre_contable(request):
         'total_ingresos': total_ingresos,
         'total_gastos': total_gastos,
         'utilidad': resultado_ejercicio,
+    })
+
+
+
+# ACTIVIDADES
+def actividades(request):
+    actividades = Actividad.objects.all().order_by('nombre')
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion', '')
+        Actividad.objects.create(nombre=nombre, descripcion=descripcion)
+        return redirect('actividades')
+
+    return render(request, 'abc/actividades.html', {'actividades': actividades})
+
+# CENTROS DE COSTO
+def centros_costo(request):
+    centros = CentroCosto.objects.all().order_by('nombre')
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion', '')
+        CentroCosto.objects.create(nombre=nombre, descripcion=descripcion)
+        return redirect('centros_costo')
+
+    return render(request, 'abc/centros_costo.html', {'centros': centros})
+
+
+# ASIGNACIONES ABC
+def asignaciones_abc(request):
+    actividades = Actividad.objects.all()
+    centros = CentroCosto.objects.all()
+    asignaciones = AsignacionABC.objects.all().order_by('-fecha')
+
+    if request.method == 'POST':
+        actividad_id = request.POST.get('actividad')
+        centro_id = request.POST.get('centro_costo')
+        monto = request.POST.get('monto')
+        fecha = request.POST.get('fecha') or timezone.now().date()
+
+        actividad = Actividad.objects.get(id=actividad_id)
+        centro = CentroCosto.objects.get(id=centro_id)
+
+        AsignacionABC.objects.create(
+            actividad=actividad,
+            centro_costo=centro,
+            monto=monto,
+            fecha=fecha
+        )
+        return redirect('asignaciones_abc')
+
+    return render(request, 'abc/asignaciones_abc.html', {
+        'asignaciones': asignaciones,
+        'actividades': actividades,
+        'centros': centros
     })

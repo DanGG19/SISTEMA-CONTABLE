@@ -13,6 +13,8 @@ urlpatterns = [
     path('iva/calcular/', views.calcular_iva, name='calcular_iva'),
     path('ajustes/nuevo/', views.crear_ajuste, name='crear_ajuste'),
     path('cierre-contable/', views.cierre_contable, name='cierre_contable'),
+    path('libro-mayor/', views.libro_mayor, name='libro_mayor'),
+    
 
     # Rutas para Planillas
     path('planillas/crear/', crear_planilla, name='crear_planilla'),
@@ -43,6 +45,12 @@ urlpatterns = [
     path('productos/', views.lista_productos, name='lista_productos'),
     path('producto/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
     path('producto/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
+
+    #Rutas para ABC
+    path('abc/actividades/', views.actividades, name='actividades'),
+    path('abc/centros/', views.centros_costo, name='centros_costo'),
+    path('abc/asignaciones/', views.asignaciones_abc, name='asignaciones_abc'),
+
 
 
 

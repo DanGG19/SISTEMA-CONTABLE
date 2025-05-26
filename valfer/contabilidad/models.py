@@ -150,3 +150,27 @@ class DetalleResultado(models.Model):
 
     def __str__(self):
         return f"{self.cuenta} - {self.monto}"
+    
+
+class Actividad(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre
+
+class CentroCosto(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre
+
+class AsignacionABC(models.Model):
+    actividad = models.ForeignKey(Actividad, on_delete=models.CASCADE)
+    centro_costo = models.ForeignKey(CentroCosto, on_delete=models.CASCADE)
+    monto = models.DecimalField(max_digits=12, decimal_places=2)
+    fecha = models.DateField()
+
+    def __str__(self):
+        return f"{self.actividad} - {self.centro_costo} ({self.fecha})"
