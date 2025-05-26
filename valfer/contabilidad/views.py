@@ -121,8 +121,6 @@ def calcular_detalle_planilla(empleado, dias_trabajados):
     return salario, afp_patronal, isss_patronal, total_costo_empleador, total_pagado
 
 
-
-
 def crear_planilla(request):
     if request.method == 'POST':
         form = PlanillaForm(request.POST)
@@ -134,16 +132,6 @@ def crear_planilla(request):
     
     return render(request, 'planillas/crear_planilla.html', {'form': form})
 
-def calcular_detalle_planilla(empleado, dias_trabajados):
-    salario_diario = empleado.salario_base / Decimal(30)
-    salario = salario_diario * Decimal(dias_trabajados)
-
-    afp_patronal = salario * Decimal('0.0775')
-    isss_patronal = salario * Decimal('0.075')
-    total_costo_empleador = salario + afp_patronal + isss_patronal
-    total_pagado = salario  # El empleado recibe el salario sin retenciones
-
-    return salario, afp_patronal, isss_patronal, total_costo_empleador, total_pagado
 
 def agregar_detalles(request, planilla_id):
     planilla = get_object_or_404(Planilla, id=planilla_id)
@@ -161,8 +149,8 @@ def agregar_detalles(request, planilla_id):
             empleado=empleado,
             dias_trabajados=dias,
             salario=salario,
-            afp_patronal=afp_patronal,
-            isss_patronal=isss_patronal,
+            afp=afp_patronal,
+            isss=isss_patronal,
             total_costo_empleador=total_costo_empleador,
             total_pagado=total_pagado
         )

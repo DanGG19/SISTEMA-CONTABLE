@@ -18,7 +18,6 @@ admin.site.register(DetalleAsiento)
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
     list_display = ('codigo', 'nombre', 'stock', 'precio_compra')  # precio_venta eliminado
-    search_fields = ('codigo', 'nombre')
 
 @admin.register(MovimientoInventario)
 class MovimientoInventarioAdmin(admin.ModelAdmin):

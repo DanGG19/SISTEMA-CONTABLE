@@ -54,9 +54,9 @@
                 <td class="p-2">{{ detalle.empleado.nombre }}</td>
                 <td class="p-2 text-center">{{ detalle.dias_trabajados }}</td>
                 <td class="p-2 text-right">$ {{ detalle.salario }}</td>
-                <td class="p-2 text-right">$ {{ detalle.isss_patronal }}</td>
-                <td class="p-2 text-right">$ {{ detalle.afp_patronal }}</td>
-                <td class="p-2 text-right">$ {{ detalle.total_aportes_patronal }}</td>
+                <td class="p-2 text-right">$ {{ detalle.isss|floatformat:2}}</td>
+                <td class="p-2 text-right">$ {{ detalle.afp|floatformat:2 }}</td>
+                <td class="p-2 text-right">$ {{ detalle.total_costo_empleador }}</td>
                 <td class="p-2 text-right font-semibold text-green-600">$ {{ detalle.total_pagado }}</td>
             </tr>
             {% empty %}
