@@ -13,8 +13,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db import transaction
 
-
-
 def home(request):
     return render(request, 'contabilidad/home.html')
 
@@ -124,7 +122,10 @@ def crear_planilla(request):
             return redirect('agregar_detalles', planilla_id=planilla.id)
     else:
         form = PlanillaForm()
-    return render(request, 'contabilidad/crear_planilla.html', {'form': form})
+    
+    return render(request, 'planillas/crear_planilla.html', {'form': form})
+
+
 
 
 def agregar_detalles(request, planilla_id):
@@ -167,11 +168,9 @@ def ver_planilla(request, planilla_id):
         'total_general': total_general,
     })
 
-from django.shortcuts import render
-from .models import Planilla
 
 def listar_planillas(request):
-    planillas = Planilla.objects.order_by('-anio', '-mes')  # ✅ Ordena por año descendente, luego mes
+    planillas = Planilla.objects.order_by('-anio', '-mes')  # Ordena por año descendente, luego mes
     return render(request, 'contabilidad/listar_planillas.html', {'planillas': planillas})
 
 def eliminar_planilla(request, planilla_id):
@@ -468,11 +467,6 @@ def seleccionar_movimiento(request):
 
 
 #Calcular el IVA
-from django.db.models import Sum
-from django.shortcuts import render, redirect
-from datetime import date
-from calendar import monthrange
-from .models import CuentaContable, DetalleAsiento, AsientoContable
 
 def calcular_iva(request):
     MES_NOMBRES = [
@@ -637,6 +631,7 @@ def agregar_producto(request):
         form = ProductoForm()
     
     return render(request, 'inventario/agregar_producto.html', {'form': form, 'titulo': 'Agregar Producto'})
+
 
 #Vista para eliminar un movimiento de inventario 
 @transaction.atomic
