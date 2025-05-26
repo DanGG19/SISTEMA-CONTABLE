@@ -204,4 +204,3 @@ class CostoTotalProducto(models.Model):
         return f'Costo total de {self.producto.nombre}'
 
 
-
