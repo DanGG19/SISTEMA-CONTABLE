@@ -943,3 +943,59 @@ def cierre_contable(request):
         'total_gastos': total_gastos,
         'utilidad': resultado_ejercicio,
     })
+
+
+
+# ACTIVIDADES
+def actividades(request):
+    actividades = Actividad.objects.all().order_by('nombre')
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion', '')
+        Actividad.objects.create(nombre=nombre, descripcion=descripcion)
+        return redirect('actividades')
+
+    return render(request, 'abc/actividades.html', {'actividades': actividades})
+
+# CENTROS DE COSTO
+def centros_costo(request):
+    centros = CentroCosto.objects.all().order_by('nombre')
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion', '')
+        CentroCosto.objects.create(nombre=nombre, descripcion=descripcion)
+        return redirect('centros_costo')
+
+    return render(request, 'abc/centros_costo.html', {'centros': centros})
+
+
+# ASIGNACIONES ABC
+def asignaciones_abc(request):
+    actividades = Actividad.objects.all()
+    centros = CentroCosto.objects.all()
+    asignaciones = AsignacionABC.objects.all().order_by('-fecha')
+
+    if request.method == 'POST':
+        actividad_id = request.POST.get('actividad')
+        centro_id = request.POST.get('centro_costo')
+        monto = request.POST.get('monto')
+        fecha = request.POST.get('fecha') or timezone.now().date()
+
+        actividad = Actividad.objects.get(id=actividad_id)
+        centro = CentroCosto.objects.get(id=centro_id)
+
+        AsignacionABC.objects.create(
+            actividad=actividad,
+            centro_costo=centro,
+            monto=monto,
+            fecha=fecha
+        )
+        return redirect('asignaciones_abc')
+
+    return render(request, 'abc/asignaciones_abc.html', {
+        'asignaciones': asignaciones,
+        'actividades': actividades,
+        'centros': centros
+    })

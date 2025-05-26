@@ -1,0 +1,33 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Actividades{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h2 class="text-3xl font-extrabold text-amber-800 mb-6">📋 Actividades</h2>
+
+    <form method="post" class="bg-white p-4 rounded shadow space-y-4 mb-6">
+        {% csrf_token %}
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Nombre de la Actividad:
+            <input type="text" name="nombre" required class="border border-gray-300 rounded p-2">
+        </label>
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Descripción:
+            <textarea name="descripcion" class="border border-gray-300 rounded p-2"></textarea>
+        </label>
+        <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600">💾 Guardar Actividad</button>
+    </form>
+
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="text-lg font-bold text-amber-800 mb-2">Actividades Registradas</h3>
+        <ul class="list-disc pl-6 text-gray-700">
+            {% for a in actividades %}
+            <li><strong>{{ a.nombre }}</strong>: {{ a.descripcion }}</li>
+            {% empty %}
+            <li>No hay actividades registradas.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

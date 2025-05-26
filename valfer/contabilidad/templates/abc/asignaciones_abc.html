@@ -1,0 +1,66 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Asignaciones ABC{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl font-extrabold text-amber-800 mb-6">📊 Asignaciones ABC</h2>
+
+    <form method="post" class="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end mb-6">
+        {% csrf_token %}
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Actividad:
+            <select name="actividad" required class="border border-gray-300 rounded p-1">
+                {% for a in actividades %}
+                <option value="{{ a.id }}">{{ a.nombre }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Centro de Costo:
+            <select name="centro_costo" required class="border border-gray-300 rounded p-1">
+                {% for c in centros %}
+                <option value="{{ c.id }}">{{ c.nombre }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Monto:
+            <input type="number" name="monto" step="0.01" required class="border border-gray-300 rounded p-1">
+        </label>
+        <label class="flex flex-col text-sm font-semibold text-gray-700">
+            Fecha:
+            <input type="date" name="fecha" value="{{ today|default:'' }}" class="border border-gray-300 rounded p-1">
+        </label>
+        <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600">💾 Guardar Asignación</button>
+    </form>
+
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="text-lg font-bold text-amber-800 mb-4">📋 Asignaciones Registradas</h3>
+        <table class="w-full text-sm border-collapse border border-gray-300 shadow-md rounded">
+            <thead class="bg-cyan-900 text-white">
+                <tr>
+                    <th class="border px-3 py-2">Actividad</th>
+                    <th class="border px-3 py-2">Centro de Costo</th>
+                    <th class="border px-3 py-2 text-right">Monto</th>
+                    <th class="border px-3 py-2 text-center">Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in asignaciones %}
+                <tr class="hover:bg-amber-50">
+                    <td class="border px-3 py-1">{{ a.actividad.nombre }}</td>
+                    <td class="border px-3 py-1">{{ a.centro_costo.nombre }}</td>
+                    <td class="border px-3 py-1 text-right">{{ a.monto|floatformat:2 }}</td>
+                    <td class="border px-3 py-1 text-center">{{ a.fecha }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-gray-500 py-2">No hay asignaciones registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
