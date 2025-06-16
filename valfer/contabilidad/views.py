@@ -12,6 +12,7 @@ from calendar import monthrange
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 
 def home(request):
     return render(request, 'contabilidad/home.html')
@@ -773,12 +774,18 @@ def cierre_contable(request):
     })
 
 
-MESES_CHOICES_DICT = {
-    '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
-    '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
-    '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre',
-}
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            auth_login(request, user)
+            return redirect('home')  
+        else:
+            messages.error(request, 'Usuario o contraseña incorrectos.')
+    return render(request, 'login/login.html')
 
-MESES_CHOICES_LIST = list(MESES_CHOICES_DICT.items())
-ANIOS_CHOICES_LIST = [(str(y), str(y)) for y in range(2020, 2031)]  
-
+def logout_view(request):
+    auth_logout(request)
+    return redirect('login')
