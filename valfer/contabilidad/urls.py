@@ -3,6 +3,11 @@ from . import views
 from .views import *
 
 urlpatterns = [
+
+    # Rutas para autenticación
+    path('login',views.login_view, name='login'),
+    path('logout', views.logout_view, name='logout'),
+
     path('', views.home, name='home'),
     path('catalogo/', catalogo_cuentas, name='catalogo'),
     path('asientos/count/<str:fecha>', views.contar_asientos_por_fecha, name='contar_asientos_por_fecha'),
@@ -32,8 +37,6 @@ urlpatterns = [
 
     #Inventario tipo de Kardex PEPS
 
-
-    # Rutas para el módulo ABC
 
 
 ]
