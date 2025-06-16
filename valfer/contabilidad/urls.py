@@ -30,26 +30,10 @@ urlpatterns = [
     path('estados-financieros/listar-resultados/', views.listar_resultados, name='listar_resultados'),
     path('estados-financieros/listar-resultados/resultados/<int:resultado_id>/', views.ver_resultado, name='ver_resultado'),
 
-    #Inventario Perpetuo
-    path('inventario/compras/registrar/', views.registrar_movimiento, {'tipo': 'compra'}, name='registrar_compra'),
-    path('inventario/ventas/registrar/', views.registrar_movimiento, {'tipo': 'venta'}, name='registrar_venta'),
-    path('inventario/', views.lista_inventario, name='lista_inventario'),  
-    path('movimientos/', views.lista_movimientos, name='lista_movimientos'),
-    path('inventario/movimiento/agregar/', views.seleccionar_movimiento, name='seleccionar_movimiento'),
-    path('producto/agregar/', views.agregar_producto, name='agregar_producto'),
-    #Eliminar movimiento
-    path('movimiento/eliminar/<int:pk>/', views.eliminar_movimiento, name='eliminar_movimiento'),
+    #Inventario tipo de Kardex PEPS
 
-
-    #CRUD para pruductos
-    path('productos/', views.lista_productos, name='lista_productos'),
-    path('producto/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
-    path('producto/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
 
     # Rutas para el módulo ABC
-    path('costos-abc/', views.calcular_costos_abc, name='calcular_costos_abc'),
-    path('registrar-datos-abc/', views.registrar_datos_abc, name='registrar_datos_abc'),
-    path('actividades/', views.registrar_actividades, name='actividades'),
 
 
 ]
