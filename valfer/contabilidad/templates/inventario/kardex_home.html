@@ -1,0 +1,81 @@
+{% extends 'contabilidad/base.html' %}
+{% load static %}
+
+{% block title %}Kardex - VALFER COFFE{% endblock %}
+
+{% block content %}
+<h2 class="text-3xl font-extrabold text-amber-800 mb-6">Kardex de Materia Prima</h2>
+<p class="mb-6 text-gray-700">Selecciona la materia prima para consultar su Kardex.</p>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+
+    <!-- Botón 1 -->
+    <a href="/kardex/1/" class="bg-white shadow-lg p-8 rounded-2xl border border-amber-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+        <div class="flex flex-col items-center justify-center">
+            <div class="text-6xl mb-4 text-amber-800">🌱</div>
+            <h3 class="font-bold text-2xl text-amber-800 mb-2">Café en Quintales</h3>
+            <p class="text-gray-600 text-center">Ver el Kardex completo del café en quintales.</p>
+        </div>
+    </a>
+
+    <!-- Botón 2 -->
+    <a href="/kardex/2/" class="bg-white shadow-lg p-8 rounded-2xl border border-amber-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+        <div class="flex flex-col items-center justify-center">
+            <div class="text-6xl mb-4 text-amber-800">🍶</div>
+            <h3 class="font-bold text-2xl text-amber-800 mb-2">Botellas de Vidrio de 750ml</h3>
+            <p class="text-gray-600 text-center">Consultar los movimientos del las botellas de vidrio.</p>
+        </div>
+    </a>
+
+    <!-- Botón 3 -->
+    <a href="/kardex/3/" class="bg-white shadow-lg p-8 rounded-2xl border border-amber-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+        <div class="flex flex-col items-center justify-center">
+            <div class="text-6xl mb-4 text-amber-800">🍾</div>
+            <h3 class="font-bold text-2xl text-amber-800 mb-2">Botella de Licor</h3>
+            <p class="text-gray-600 text-center">Revisar el Kardex de las botellas de licor.</p>
+        </div>
+    </a>
+
+</div>
+
+<!-- NUEVA SECCIÓN -->
+<h2 class="text-3xl font-extrabold text-amber-800 mb-10 mt-20">Kardex de Productos Terminados</h2>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+
+    <!-- Embolsar Café -->
+    <a href="{% url 'fabricar_embolsar_cafe' %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+        <div class="flex flex-col items-center justify-center">
+            <div class="text-6xl mb-4 text-green-700"> 
+                <img src="{% static 'img/coffebag.png' %}" alt="" width="64" height="64">
+            </div>
+            <h3 class="font-bold text-2xl text-green-700 mb-2">Embolsar Café</h3>
+            <p class="text-gray-600 text-center">Proceso de embolsado de café.</p>
+        </div>
+    </a>
+
+    <!-- Mezclar Licor -->
+    <a href="{% url 'fabricar_mezcla_licor' %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+        <div class="flex flex-col items-center justify-center">
+            <div class="text-6xl mb-4 text-green-700">
+                <img src="{% static 'img/blender.png' %}" alt="" width="64" height="64">
+            </div>
+            <h3 class="font-bold text-2xl text-green-700 mb-2">Mezclar Licor</h3>
+            <p class="text-gray-600 text-center">Proceso de mezcla de licor.</p>
+        </div>
+    </a>
+
+    <!-- Embotellar Licor -->
+    <a href="{% url 'fabricar_embotellar_licor' %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+        <div class="flex flex-col items-center justify-center">
+            <div class="text-6xl mb-4 text-green-700">
+                <img src="{% static 'img/licorcafe.png' %}" alt="" width="64" height="64">
+            </div>
+            <h3 class="font-bold text-2xl text-green-700 mb-2">Embotellar Licor</h3>
+            <p class="text-gray-600 text-center">Proceso de embotellado de licor.</p>
+        </div>
+    </a>
+
+</div>
+
+{% endblock %}

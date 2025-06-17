@@ -793,7 +793,11 @@ def logout_view(request):
 
 
 
-# views.py
+# VISTAS KARDEX METODO PEPS
+
+
+def kardex_home(request):
+    return render(request, 'inventario/kardex_home.html')
 
 def kardex_materia_prima_list(request, materia_prima_id):
     materia = get_object_or_404(MateriaPrima, id=materia_prima_id)
