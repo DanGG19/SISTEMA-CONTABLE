@@ -7,7 +7,7 @@ from datetime import datetime
 from django.db.models import Sum
 from django.utils.timezone import now
 from django.utils import timezone
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import date
 from calendar import monthrange
 from django.views.decorators.csrf import csrf_exempt
@@ -865,27 +865,28 @@ def calcular_existencias_peps(movimientos):
     for mov in movimientos:
         if mov.tipo_movimiento == 'entrada':
             lotes.append({
-                'cantidad': float(mov.cantidad),
-                'costo_unitario': float(mov.costo_unitario),
+                'cantidad': Decimal(mov.cantidad),
+                'costo_unitario': Decimal(mov.costo_unitario),
             })
         elif mov.tipo_movimiento in ['salida', 'proceso']:
-            cantidad_restante = float(mov.cantidad)
+            cantidad_restante = Decimal(mov.cantidad)
             while cantidad_restante > 0 and lotes:
                 lote = lotes[0]
                 if lote['cantidad'] > cantidad_restante:
                     lote['cantidad'] -= cantidad_restante
-                    cantidad_restante = 0
+                    cantidad_restante = Decimal('0')
                 else:
                     cantidad_restante -= lote['cantidad']
                     lotes.pop(0)
 
-        # String tipo "4x250)+(2x200"
+        # Armado del detalle con decimales
         detalle = "+".join(
-            f"({int(l['cantidad'])}*{int(l['costo_unitario'])})" for l in lotes if l['cantidad'] > 0
+            f"({l['cantidad'].quantize(Decimal('0.00'))}*{l['costo_unitario'].quantize(Decimal('0.00'))})" 
+            for l in lotes if l['cantidad'] > 0
         ) if lotes else "0"
 
-        unidades_totales = sum(l['cantidad'] for l in lotes)
-        valor_total = sum(l['cantidad'] * l['costo_unitario'] for l in lotes)
+        unidades_totales = sum(l['cantidad'] for l in lotes).quantize(Decimal('0.00'))
+        valor_total = sum(l['cantidad'] * l['costo_unitario'] for l in lotes).quantize(Decimal('0.00'))
 
         estado_por_movimiento.append({
             "detalle": detalle,

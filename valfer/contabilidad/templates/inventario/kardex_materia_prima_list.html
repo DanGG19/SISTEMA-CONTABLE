@@ -53,7 +53,7 @@
           {% endif %}
           <!-- Existencias -->
           <td class="border px-2 py-1">{{ exist.unidades_totales|floatformat:2 }}</td>
-          <td class="border px-2 py-1">{{ exist.detalle }}</td>
+          <td class="border px-2 py-1">{{ exist.detalle|safe }}</td>
           <td class="border px-2 py-1">{{ exist.valor_total|floatformat:2 }}</td>
         </tr>
       {% endfor %}
