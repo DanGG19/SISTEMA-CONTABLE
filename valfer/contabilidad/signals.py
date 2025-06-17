@@ -86,6 +86,11 @@ def crear_materias_primas_iniciales(sender, **kwargs):
                 'nombre': 'Botella de licor',
                 'unidad_medida': 'botella'
             }
+            ,
+            {
+                'nombre': 'Garrafón de agua',
+                'unidad_medida': 'garrafa'
+            }
         ]
         
         for materia_data in materias_primas_iniciales:
