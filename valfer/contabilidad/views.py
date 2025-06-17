@@ -792,6 +792,8 @@ def logout_view(request):
 
 
 
+# views.py
+
 def kardex_materia_prima_list(request, materia_prima_id):
     materia = get_object_or_404(MateriaPrima, id=materia_prima_id)
     movimientos = KardexMateriaPrima.objects.filter(materia_prima=materia).order_by('fecha', 'id')
@@ -807,33 +809,38 @@ def kardex_materia_prima_nuevo(request, materia_prima_id):
         if form.is_valid():
             movimiento = form.save(commit=False)
             movimiento.materia_prima = materia
-            
+            # Calcular el total del movimiento antes de guardar
+            movimiento.total = movimiento.cantidad * movimiento.costo_unitario
+
+            # Obtener el último movimiento registrado para la materia prima
             ultimo = KardexMateriaPrima.objects.filter(materia_prima=materia).order_by('-fecha', '-id').first()
-            if ultimo:
-                if movimiento.tipo_movimiento == 'entrada':
-                    movimiento.saldo_cantidad = ultimo.saldo_cantidad + movimiento.cantidad
-                    movimiento.saldo_total = ultimo.saldo_total + (movimiento.cantidad * movimiento.costo_unitario)
-                elif movimiento.tipo_movimiento == 'salida' or movimiento.tipo_movimiento == 'proceso':
-                    # Aquí viene la lógica PEPS real: debes descontar del saldo anterior usando el costo PEPS (primeras entradas)
-                    # Por simplicidad, te muestro el esquema básico, pero el PEPS real requiere recorrer los lotes anteriores.
-                    if movimiento.cantidad > ultimo.saldo_cantidad:
-                        messages.error(request, "No hay suficiente saldo para esta salida")
-                        return redirect('kardex_materia_prima_nuevo', materia_prima_id=materia.id)
-                    movimiento.saldo_cantidad = ultimo.saldo_cantidad - movimiento.cantidad
-                    # Este cálculo es solo ejemplo, el PEPS real requiere consumir los lotes antiguos primero
-                    movimiento.saldo_total = ultimo.saldo_total - (movimiento.cantidad * ultimo.costo_unitario)
-            else:
-                # Primer movimiento, solo entrada permitida
+
+            # Primer movimiento (solo entrada válida)
+            if not ultimo:
                 if movimiento.tipo_movimiento == 'entrada':
                     movimiento.saldo_cantidad = movimiento.cantidad
-                    movimiento.saldo_total = movimiento.cantidad * movimiento.costo_unitario
+                    movimiento.saldo_total = movimiento.total
                 else:
-                    messages.error(request, "Primero debe registrar una entrada")
+                    messages.error(request, "Primero debe registrar una entrada para esta materia prima.")
                     return redirect('kardex_materia_prima_nuevo', materia_prima_id=materia.id)
-            
-            # Lógica PEPS: aquí deberías calcular el saldo actualizado (ver abajo)
+            else:
+                if movimiento.tipo_movimiento == 'entrada':
+                    movimiento.saldo_cantidad = ultimo.saldo_cantidad + movimiento.cantidad
+                    movimiento.saldo_total = ultimo.saldo_total + movimiento.total
+                elif movimiento.tipo_movimiento in ['salida', 'proceso']:
+                    if movimiento.cantidad > ultimo.saldo_cantidad:
+                        messages.error(request, "No hay suficiente saldo para esta salida.")
+                        return redirect('kardex_materia_prima_nuevo', materia_prima_id=materia.id)
+                    movimiento.saldo_cantidad = ultimo.saldo_cantidad - movimiento.cantidad
+                    # (NOTA: Esto usa el último costo_unitario, no PEPS real)
+                    movimiento.saldo_total = ultimo.saldo_total - (movimiento.cantidad * ultimo.costo_unitario)
+                else:
+                    # En caso de nuevos tipos de movimientos
+                    movimiento.saldo_cantidad = ultimo.saldo_cantidad
+                    movimiento.saldo_total = ultimo.saldo_total
+
             movimiento.save()
-            messages.success(request, "Movimiento registrado")
+            messages.success(request, "Movimiento registrado exitosamente.")
             return redirect('kardex_materia_prima_list', materia_prima_id=materia.id)
     else:
         form = KardexMateriaPrimaForm()
