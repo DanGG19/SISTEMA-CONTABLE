@@ -118,3 +118,67 @@ class DetalleResultado(models.Model):
     def __str__(self):
         return f"{self.cuenta} - {self.monto}"
     
+#Modelos para Materia Prima y Producto Terminado
+class MateriaPrima(models.Model):
+    nombre = models.CharField(max_length=100)
+    unidad_medida = models.CharField(max_length=20)  # Ej: 'quintal', 'botella', 'litro'
+
+    def __str__(self):
+        return self.nombre
+
+class ProductoTerminado(models.Model):
+    nombre = models.CharField(max_length=100)
+    unidad_medida = models.CharField(max_length=20)  # Ej: 'bolsa 400g', 'botella 750ml'
+
+    def __str__(self):
+        return self.nombre
+
+#Modelo para Kardex de Materia Prima
+class KardexMateriaPrima(models.Model):
+    materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.CASCADE)
+    fecha = models.DateField()
+    tipo_movimiento = models.CharField(max_length=20, choices=[('entrada','Entrada'),('salida','Salida'),('proceso','Consumo Proceso')])
+    referencia = models.CharField(max_length=255, blank=True)  # Ej: factura, proceso, etc.
+    cantidad = models.DecimalField(max_digits=12, decimal_places=2)
+    costo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+    saldo_cantidad = models.DecimalField(max_digits=12, decimal_places=2)
+    saldo_total = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.materia_prima} - {self.fecha} - {self.tipo_movimiento}"
+
+#Modelo para Kardex de Producto Terminado
+class KardexProductoTerminado(models.Model):
+    producto = models.ForeignKey(ProductoTerminado, on_delete=models.CASCADE)
+    fecha = models.DateField()
+    tipo_movimiento = models.CharField(max_length=20, choices=[('ingreso','Ingreso Proceso'),('salida','Venta')])
+    referencia = models.CharField(max_length=255, blank=True)
+    cantidad = models.DecimalField(max_digits=12, decimal_places=2)
+    costo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+    saldo_cantidad = models.DecimalField(max_digits=12, decimal_places=2)
+    saldo_total = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.producto} - {self.fecha} - {self.tipo_movimiento}"
+
+#Modelos para Procesos de Producción
+class ProcesoProduccion(models.Model):
+    fecha = models.DateField()
+    tipo = models.CharField(max_length=30, choices=[('mezcla','Mezcla Licor'),('embazado','Embazado'),('tostado','Tostado')])
+    cantidad_producida = models.DecimalField(max_digits=12, decimal_places=2)
+    producto_terminado = models.ForeignKey(ProductoTerminado, on_delete=models.CASCADE)
+    costo_total = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} - {self.producto_terminado} - {self.fecha}"
+
+class ConsumoMateriaPrima(models.Model):
+    proceso = models.ForeignKey(ProcesoProduccion, related_name="consumos", on_delete=models.CASCADE)
+    materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.CASCADE)
+    cantidad_usada = models.DecimalField(max_digits=12, decimal_places=2)
+    costo_asignado = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.materia_prima} ({self.cantidad_usada}) en {self.proceso}"

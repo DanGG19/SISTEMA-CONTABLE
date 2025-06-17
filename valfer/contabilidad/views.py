@@ -789,3 +789,55 @@ def login_view(request):
 def logout_view(request):
     auth_logout(request)
     return redirect('login')
+
+
+
+def kardex_materia_prima_list(request, materia_prima_id):
+    materia = get_object_or_404(MateriaPrima, id=materia_prima_id)
+    movimientos = KardexMateriaPrima.objects.filter(materia_prima=materia).order_by('fecha', 'id')
+    return render(request, 'inventario/kardex_materia_prima_list.html', {
+        'materia': materia,
+        'movimientos': movimientos,
+    })
+
+def kardex_materia_prima_nuevo(request, materia_prima_id):
+    materia = get_object_or_404(MateriaPrima, id=materia_prima_id)
+    if request.method == 'POST':
+        form = KardexMateriaPrimaForm(request.POST)
+        if form.is_valid():
+            movimiento = form.save(commit=False)
+            movimiento.materia_prima = materia
+            
+            ultimo = KardexMateriaPrima.objects.filter(materia_prima=materia).order_by('-fecha', '-id').first()
+            if ultimo:
+                if movimiento.tipo_movimiento == 'entrada':
+                    movimiento.saldo_cantidad = ultimo.saldo_cantidad + movimiento.cantidad
+                    movimiento.saldo_total = ultimo.saldo_total + (movimiento.cantidad * movimiento.costo_unitario)
+                elif movimiento.tipo_movimiento == 'salida' or movimiento.tipo_movimiento == 'proceso':
+                    # Aquí viene la lógica PEPS real: debes descontar del saldo anterior usando el costo PEPS (primeras entradas)
+                    # Por simplicidad, te muestro el esquema básico, pero el PEPS real requiere recorrer los lotes anteriores.
+                    if movimiento.cantidad > ultimo.saldo_cantidad:
+                        messages.error(request, "No hay suficiente saldo para esta salida")
+                        return redirect('kardex_materia_prima_nuevo', materia_prima_id=materia.id)
+                    movimiento.saldo_cantidad = ultimo.saldo_cantidad - movimiento.cantidad
+                    # Este cálculo es solo ejemplo, el PEPS real requiere consumir los lotes antiguos primero
+                    movimiento.saldo_total = ultimo.saldo_total - (movimiento.cantidad * ultimo.costo_unitario)
+            else:
+                # Primer movimiento, solo entrada permitida
+                if movimiento.tipo_movimiento == 'entrada':
+                    movimiento.saldo_cantidad = movimiento.cantidad
+                    movimiento.saldo_total = movimiento.cantidad * movimiento.costo_unitario
+                else:
+                    messages.error(request, "Primero debe registrar una entrada")
+                    return redirect('kardex_materia_prima_nuevo', materia_prima_id=materia.id)
+            
+            # Lógica PEPS: aquí deberías calcular el saldo actualizado (ver abajo)
+            movimiento.save()
+            messages.success(request, "Movimiento registrado")
+            return redirect('kardex_materia_prima_list', materia_prima_id=materia.id)
+    else:
+        form = KardexMateriaPrimaForm()
+    return render(request, 'inventario/kardex_materia_prima_nuevo.html', {
+        'materia': materia,
+        'form': form,
+    })

@@ -36,6 +36,8 @@ urlpatterns = [
     path('estados-financieros/listar-resultados/resultados/<int:resultado_id>/', views.ver_resultado, name='ver_resultado'),
 
     #Inventario tipo de Kardex PEPS
+    path('kardex/<int:materia_prima_id>/', views.kardex_materia_prima_list, name='kardex_materia_prima_list'),
+    path('kardex/<int:materia_prima_id>/nuevo/', views.kardex_materia_prima_nuevo, name='kardex_materia_prima_nuevo'),
 
 
 

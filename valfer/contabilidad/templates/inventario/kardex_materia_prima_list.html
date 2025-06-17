@@ -1,0 +1,48 @@
+{% extends 'contabilidad/base.html' %}
+
+{% block title %}Kardex de {{ materia.nombre }}{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-4">📦 Kardex de {{ materia.nombre }}</h2>
+
+{% if movimientos %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm border">
+      <thead class="bg-cyan-900 text-white">
+        <tr>
+          <th class="border px-4 py-2">#</th>
+          <th class="border px-4 py-2">Fecha</th>
+          <th class="border px-4 py-2">Tipo</th>
+          <th class="border px-4 py-2">Referencia</th>
+          <th class="border px-4 py-2 text-right">Cantidad</th>
+          <th class="border px-4 py-2 text-right">Costo Unitario</th>
+          <th class="border px-4 py-2 text-right">Total Movimiento</th>
+          <th class="border px-4 py-2 text-right">Saldo Cantidad</th>
+          <th class="border px-4 py-2 text-right">Saldo Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mov in movimientos %}
+        <tr class="border-t hover:bg-gray-100">
+          <td class="border px-4 py-2">{{ forloop.counter }}</td>
+          <td class="border px-4 py-2">{{ mov.fecha }}</td>
+          <td class="border px-4 py-2">{{ mov.get_tipo_movimiento_display }}</td>
+          <td class="border px-4 py-2">{{ mov.referencia }}</td>
+          <td class="border px-4 py-2 text-right">{{ mov.cantidad|floatformat:2 }}</td>
+          <td class="border px-4 py-2 text-right">{{ mov.costo_unitario|floatformat:2 }}</td>
+          <td class="border px-4 py-2 text-right">{{ mov.total|floatformat:2 }}</td>
+          <td class="border px-4 py-2 text-right">{{ mov.saldo_cantidad|floatformat:2 }}</td>
+          <td class="border px-4 py-2 text-right">{{ mov.saldo_total|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-4">
+    <a href="{% url 'kardex_materia_prima_nuevo' materia.id %}" class="inline-block bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">Agregar Movimiento</a>
+  </div>
+{% else %}
+  <p class="text-gray-600">No hay movimientos registrados aún para esta materia prima.</p>
+  <a href="{% url 'kardex_materia_prima_nuevo' materia.id %}" class="inline-block mt-2 bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">Agregar Primer Movimiento</a>
+{% endif %}
+{% endblock %}
