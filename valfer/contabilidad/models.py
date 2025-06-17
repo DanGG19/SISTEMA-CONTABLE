@@ -78,7 +78,6 @@ class DetallePlanilla(models.Model):
     total_costo_empleador = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
 
-
 #MOdelo para el balance general
 class BalanceGeneral(models.Model):
     fecha_generado = models.DateTimeField(auto_now_add=True)
@@ -99,38 +98,6 @@ class DetalleBalance(models.Model):
     def __str__(self):
         return f"{self.cuenta} - {self.saldo}"
 
-#Modelo para Inventario Perpetuo
-class Producto(models.Model):
-    codigo = models.CharField(max_length=20, unique=True)
-    nombre = models.CharField(max_length=100)
-    precio_compra = models.DecimalField(max_digits=10, decimal_places=2)  # Costo unitario
-    stock = models.IntegerField(default=0)
-    cuenta_inventario = models.ForeignKey(CuentaContable, on_delete=models.PROTECT, related_name='productos_inventario')  # Ej: 1105.01
-    cuenta_ingresos = models.ForeignKey(CuentaContable, on_delete=models.PROTECT, related_name='productos_ingresos')  # Ej: 5101.01
-    cuenta_costo_venta = models.ForeignKey(CuentaContable, on_delete=models.PROTECT, related_name='productos_costo')  # Ej: 4101.01
-
-    def __str__(self):
-        return f"{self.codigo} - {self.nombre}"
-
-class MovimientoInventario(models.Model):
-    TIPO_CHOICES = [('compra', 'Compra'), ('venta', 'Venta')]
-    fecha = models.DateField()
-    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
-    cantidad = models.IntegerField()
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    iva = models.DecimalField(max_digits=10, decimal_places=2, default=0.13)  # 13% IVA
-    asiento = models.ForeignKey(AsientoContable, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    def calcular_total(self):
-        """Calcula el total (cantidad × precio_unitario)"""
-        try:
-            return round(float(self.cantidad) * float(self.precio_unitario), 2)
-        except (TypeError, ValueError):
-            return 0.0
-
-    def __str__(self):
-        return f"{self.tipo.upper()} - {self.producto.nombre} x{self.cantidad}"
 #Modelo para el estado de resultados
 class EstadoResultados(models.Model):
     fecha_generado = models.DateTimeField(auto_now_add=True)
