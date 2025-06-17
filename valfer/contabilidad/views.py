@@ -1093,26 +1093,34 @@ def fabricar_mezcla_licor(request):
             horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
         except (KeyError, ValueError, Decimal.InvalidOperation):
             messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
-            return redirect('fabricar_mezclar_licor')
+            return redirect('fabricar_mezcla_licor')
 
-        # Proporciones por cada 400 litros de mezcla:
-        litros_por_quintal = Decimal('400')
-        litros_por_botella_licor = Decimal('40')  # Por cada 400 litros: 10 litros licor, 400/10 = 40
+        if litros_a_fabricar <= 0:
+            messages.error(request, "La cantidad a fabricar debe ser mayor a cero.")
+            return redirect('fabricar_mezcla_licor')
 
-        # Calcula insumos proporcionales
-        cafe_quintales_necesarios = (litros_a_fabricar / litros_por_quintal).quantize(Decimal('0.0001'))
-        licor_litros_necesarios = (litros_a_fabricar / 40).quantize(Decimal('0.0001'))
+        if mano_obra_por_hora < 0 or horas_trabajadas < 0:
+            messages.error(request, "El costo por hora y las horas trabajadas no pueden ser negativos.")
+            return redirect('fabricar_mezcla_licor')
 
-        # --- CAFÉ ---
-        cafe = get_object_or_404(MateriaPrima, nombre="Café en Quintales")
-        movimientos_cafe = KardexMateriaPrima.objects.filter(
-            materia_prima=cafe
-        ).order_by('fecha', 'id')
+        # 1. Cálculo de insumos requeridos (ajustar a tu lógica)
+        # Por cada 400 litros: 1 quintal café, 10 litros alcohol, 15 garrafones de agua (300 litros)
+        proporcion = litros_a_fabricar / Decimal('400')
+        quintales_cafe = proporcion * Decimal('1')
+        litros_licor = proporcion * Decimal('10')
+        garrafones_agua = (proporcion * Decimal('15')).quantize(Decimal('0.0001'))
+        litros_agua = garrafones_agua * Decimal('20')
 
-        cantidad_cafe_restante = cafe_quintales_necesarios
+        # 2. Materias primas
+        mp_cafe = get_object_or_404(MateriaPrima, nombre__iexact="Café en Quintales")
+        mp_licor = get_object_or_404(MateriaPrima, nombre__iexact="Botella de licor")
+        mp_agua = get_object_or_404(MateriaPrima, nombre__iexact="Garrafón de agua")
+
+        # --- Consumo de Café
+        movimientos_cafe = KardexMateriaPrima.objects.filter(materia_prima=mp_cafe).order_by('fecha', 'id')
+        cantidad_cafe_restante = quintales_cafe
         costo_total_cafe = Decimal('0')
         lotes_cafe = []
-
         for mov in movimientos_cafe:
             if mov.saldo_cantidad > 0 and cantidad_cafe_restante > 0:
                 a_consumir = min(mov.saldo_cantidad, cantidad_cafe_restante)
@@ -1126,32 +1134,15 @@ def fabricar_mezcla_licor(request):
                 mov.saldo_cantidad -= a_consumir
                 mov.saldo_total -= a_consumir * mov.costo_unitario
                 mov.save()
-                # Registrar salida en Kardex
-                KardexMateriaPrima.objects.create(
-                    materia_prima=cafe,
-                    fecha=timezone.now(),
-                    tipo_movimiento='salida',
-                    concepto="Consumo para mezcla de licor",
-                    cantidad=a_consumir,
-                    costo_unitario=mov.costo_unitario,
-                    total=a_consumir * mov.costo_unitario,
-                    saldo_cantidad=mov.saldo_cantidad,
-                    saldo_total=mov.saldo_total,
-                )
                 cantidad_cafe_restante -= a_consumir
             if cantidad_cafe_restante <= 0:
                 break
 
-        # --- LICOR ---
-        licor = get_object_or_404(MateriaPrima, nombre="Botella de licor")
-        movimientos_licor = KardexMateriaPrima.objects.filter(
-            materia_prima=licor
-        ).order_by('fecha', 'id')
-
-        cantidad_licor_restante = licor_litros_necesarios
+        # --- Consumo de Licor
+        movimientos_licor = KardexMateriaPrima.objects.filter(materia_prima=mp_licor).order_by('fecha', 'id')
+        cantidad_licor_restante = litros_licor
         costo_total_licor = Decimal('0')
         lotes_licor = []
-
         for mov in movimientos_licor:
             if mov.saldo_cantidad > 0 and cantidad_licor_restante > 0:
                 a_consumir = min(mov.saldo_cantidad, cantidad_licor_restante)
@@ -1165,44 +1156,58 @@ def fabricar_mezcla_licor(request):
                 mov.saldo_cantidad -= a_consumir
                 mov.saldo_total -= a_consumir * mov.costo_unitario
                 mov.save()
-                KardexMateriaPrima.objects.create(
-                    materia_prima=licor,
-                    fecha=timezone.now(),
-                    tipo_movimiento='salida',
-                    concepto="Consumo para mezcla de licor",
-                    cantidad=a_consumir,
-                    costo_unitario=mov.costo_unitario,
-                    total=a_consumir * mov.costo_unitario,
-                    saldo_cantidad=mov.saldo_cantidad,
-                    saldo_total=mov.saldo_total,
-                )
                 cantidad_licor_restante -= a_consumir
             if cantidad_licor_restante <= 0:
                 break
 
-        # Mano de obra y CIF
-        costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
-        costo_total_mp = (costo_total_cafe + costo_total_licor).quantize(Decimal('0.01'))
-        cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
-        costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
+        # --- Consumo de Agua
+        movimientos_agua = KardexMateriaPrima.objects.filter(materia_prima=mp_agua).order_by('fecha', 'id')
+        cantidad_agua_restante = garrafones_agua
+        costo_total_agua = Decimal('0')
+        lotes_agua = []
+        for mov in movimientos_agua:
+            if mov.saldo_cantidad > 0 and cantidad_agua_restante > 0:
+                a_consumir = min(mov.saldo_cantidad, cantidad_agua_restante)
+                costo_total_agua += a_consumir * mov.costo_unitario
+                lotes_agua.append({
+                    "lote_id": mov.id,
+                    "cantidad": a_consumir,
+                    "litros_usados": a_consumir * Decimal('20'),
+                    "costo_unitario": mov.costo_unitario,
+                    "total": (a_consumir * mov.costo_unitario).quantize(Decimal('0.01')),
+                })
+                mov.saldo_cantidad -= a_consumir
+                mov.saldo_total -= a_consumir * mov.costo_unitario
+                mov.save()
+                cantidad_agua_restante -= a_consumir
+            if cantidad_agua_restante <= 0:
+                break
 
-        producto_final = get_object_or_404(ProductoTerminado, nombre="Mezcla de Licor de Café")
+        if cantidad_cafe_restante > 0 or cantidad_licor_restante > 0 or cantidad_agua_restante > 0:
+            messages.error(request, "No hay suficiente materia prima para fabricar esa cantidad de licor de café.")
+            return redirect('fabricar_mezcla_licor')
+
+        # 3. Costos
+        costo_mp = costo_total_cafe + costo_total_licor + costo_total_agua
+        costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
+        cif = ((costo_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
+        costo_total = (costo_mp + costo_mano_obra + cif).quantize(Decimal('0.02'))
+
+        producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Mezcla de Licor de Café")
         proceso = ProcesoFabricacion.objects.create(
             tipo='mezclar_licor',
             producto_final=producto_final,
             cantidad_producida=litros_a_fabricar,
-            gramos_usados=Decimal('0'),  # no aplica aquí
-            quintales_usados=cafe_quintales_necesarios,
-            costo_materia_prima=costo_total_mp,
+            gramos_usados=Decimal('0'),
+            quintales_usados=quintales_cafe,
+            costo_materia_prima=costo_mp,
             costo_mano_obra=costo_mano_obra,
             cif=cif,
             costo_total=costo_total
         )
 
-        # Kardex de producto terminado (entrada)
-        ultimo_kardex = KardexProductoTerminado.objects.filter(
-            producto=producto_final
-        ).order_by('-fecha', '-id').first()
+        # Kardex de Producto Terminado (entrada)
+        ultimo_kardex = KardexProductoTerminado.objects.filter(producto=producto_final).order_by('-fecha', '-id').first()
         saldo_cantidad = (ultimo_kardex.saldo_cantidad if ultimo_kardex else Decimal('0')) + litros_a_fabricar
         saldo_total = (ultimo_kardex.saldo_total if ultimo_kardex else Decimal('0')) + costo_total
 
@@ -1210,21 +1215,25 @@ def fabricar_mezcla_licor(request):
             producto=producto_final,
             fecha=timezone.now(),
             tipo_movimiento='ingreso',
-            concepto=f"Fabricación por proceso {proceso.id}",
+            concepto=f"Fabricación de mezcla de licor (proceso {proceso.id})",
             cantidad=litros_a_fabricar,
-            costo_unitario=(costo_total / litros_a_fabricar).quantize(Decimal('0.01')),
+            costo_unitario=(costo_total / litros_a_fabricar).quantize(Decimal('0.02')),
             total=costo_total,
             saldo_cantidad=saldo_cantidad,
             saldo_total=saldo_total,
         )
 
-        return render(request, 'fabricacion/fabricar_mezclar_licor_exito.html', {
+        context = {
             'proceso': proceso,
-            'cafe_usado_quintales': cafe_quintales_necesarios,
-            'licor_usado_litros': licor_litros_necesarios,
+            'cafe_usado_quintales': quintales_cafe,
+            'licor_usado_litros': litros_licor,
+            'agua_usada_garrafones': garrafones_agua,
+            'agua_usada_litros': litros_agua,
             'lotes_cafe': lotes_cafe,
             'lotes_licor': lotes_licor,
-        })
+            'lotes_agua': lotes_agua,
+        }
+        return render(request, 'fabricacion/fabricar_mezclar_licor_exito.html', context)
 
     return render(request, 'fabricacion/fabricar_mezclar_licor.html')
 
