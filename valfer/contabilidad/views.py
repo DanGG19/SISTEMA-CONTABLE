@@ -797,10 +797,14 @@ def logout_view(request):
 def kardex_materia_prima_list(request, materia_prima_id):
     materia = get_object_or_404(MateriaPrima, id=materia_prima_id)
     movimientos = KardexMateriaPrima.objects.filter(materia_prima=materia).order_by('fecha', 'id')
+    existencias_peps = calcular_existencias_peps(movimientos)
+    movimientos_y_lotes = zip(movimientos, existencias_peps)
     return render(request, 'inventario/kardex_materia_prima_list.html', {
         'materia': materia,
-        'movimientos': movimientos,
+        'movimientos_y_lotes': movimientos_y_lotes,
     })
+
+
 
 def kardex_materia_prima_nuevo(request, materia_prima_id):
     materia = get_object_or_404(MateriaPrima, id=materia_prima_id)
@@ -848,3 +852,42 @@ def kardex_materia_prima_nuevo(request, materia_prima_id):
         'materia': materia,
         'form': form,
     })
+
+def calcular_existencias_peps(movimientos):
+    lotes = []
+    estado_por_movimiento = []
+
+    for mov in movimientos:
+        if mov.tipo_movimiento == 'entrada':
+            lotes.append({
+                'cantidad': float(mov.cantidad),
+                'costo_unitario': float(mov.costo_unitario),
+            })
+        elif mov.tipo_movimiento in ['salida', 'proceso']:
+            cantidad_restante = float(mov.cantidad)
+            while cantidad_restante > 0 and lotes:
+                lote = lotes[0]
+                if lote['cantidad'] > cantidad_restante:
+                    lote['cantidad'] -= cantidad_restante
+                    cantidad_restante = 0
+                else:
+                    cantidad_restante -= lote['cantidad']
+                    lotes.pop(0)
+
+        # String tipo "4x250)+(2x200"
+        detalle = "+".join(
+            f"({int(l['cantidad'])}*{int(l['costo_unitario'])})" for l in lotes if l['cantidad'] > 0
+        ) if lotes else "0"
+
+        unidades_totales = sum(l['cantidad'] for l in lotes)
+        valor_total = sum(l['cantidad'] * l['costo_unitario'] for l in lotes)
+
+        estado_por_movimiento.append({
+            "detalle": detalle,
+            "unidades_totales": unidades_totales,
+            "valor_total": valor_total,
+        })
+    return estado_por_movimiento
+
+
+
