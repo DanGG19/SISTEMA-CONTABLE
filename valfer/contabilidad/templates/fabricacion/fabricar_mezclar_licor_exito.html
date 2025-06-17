@@ -1,0 +1,70 @@
+{% extends 'contabilidad/base.html' %}
+{% block content %}
+<div class="max-w-xl mx-auto mt-6 bg-white p-8 rounded shadow">
+  <h2 class="text-2xl font-bold text-green-700 mb-4 text-center">¡Mezcla registrada exitosamente!</h2>
+  <ul class="mb-4 text-lg">
+    <li><b>ID Proceso:</b> {{ proceso.id }}</li>
+    <li><b>Cantidad producida:</b> {{ proceso.cantidad_producida|floatformat:2 }} litros</li>
+    <li><b>Café usado:</b> {{ cafe_usado_quintales|floatformat:4 }} quintales</li>
+    <li><b>Licor usado:</b> {{ licor_usado_litros|floatformat:2 }} litros</li>
+    <li><b>Costo materia prima:</b> ${{ proceso.costo_materia_prima|floatformat:2 }}</li>
+    <li><b>Costo mano de obra:</b> ${{ proceso.costo_mano_obra|floatformat:2 }}</li>
+    <li><b>CIF (30%):</b> ${{ proceso.cif|floatformat:2 }}</li>
+    <li><b>Costo total:</b> <span class="font-bold text-green-700">${{ proceso.costo_total|floatformat:2 }}</span></li>
+  </ul>
+  <hr>
+  <h4 class="mt-4 font-semibold">Detalle de lotes de café consumidos:</h4>
+  {% if lotes_cafe %}
+  <table class="w-full text-sm border mt-2">
+    <thead class="bg-cyan-900 text-white">
+      <tr>
+        <th class="border px-2 py-1">Lote Kardex ID</th>
+        <th class="border px-2 py-1">Cantidad usada (q)</th>
+        <th class="border px-2 py-1">Costo Unitario</th>
+        <th class="border px-2 py-1">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lote in lotes_cafe %}
+      <tr>
+        <td class="border px-2 py-1">{{ lote.lote_id }}</td>
+        <td class="border px-2 py-1">{{ lote.cantidad|floatformat:4 }}</td>
+        <td class="border px-2 py-1">${{ lote.costo_unitario|floatformat:2 }}</td>
+        <td class="border px-2 py-1">${{ lote.total|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="text-gray-500">No se consumió café.</p>
+  {% endif %}
+  <h4 class="mt-4 font-semibold">Detalle de lotes de licor consumidos:</h4>
+  {% if lotes_licor %}
+  <table class="w-full text-sm border mt-2">
+    <thead class="bg-cyan-900 text-white">
+      <tr>
+        <th class="border px-2 py-1">Lote Kardex ID</th>
+        <th class="border px-2 py-1">Cantidad usada (l)</th>
+        <th class="border px-2 py-1">Costo Unitario</th>
+        <th class="border px-2 py-1">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lote in lotes_licor %}
+      <tr>
+        <td class="border px-2 py-1">{{ lote.lote_id }}</td>
+        <td class="border px-2 py-1">{{ lote.cantidad|floatformat:2 }}</td>
+        <td class="border px-2 py-1">${{ lote.costo_unitario|floatformat:2 }}</td>
+        <td class="border px-2 py-1">${{ lote.total|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="text-gray-500">No se consumió licor.</p>
+  {% endif %}
+  <div class="text-center mt-4">
+    <a href="{% url 'kardex_producto_terminado' 2 %}" class="bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">Ver Kardex de Licor de Café</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'contabilidad/base.html' %}
+{% block title %}Productos Terminados{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-4 text-center text-emerald-700">Productos Terminados</h2>
+<div class="overflow-x-auto">
+  <table class="w-full text-sm border text-center">
+    <thead class="bg-cyan-900 text-white">
+      <tr>
+        <th class="border px-2 py-1">#</th>
+        <th class="border px-2 py-1">Nombre</th>
+        <th class="border px-2 py-1">Unidad de Medida</th>
+        <th class="border px-2 py-1">Kardex</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for producto in productos %}
+      <tr class="border-t hover:bg-gray-100">
+        <td class="border px-2 py-1">{{ forloop.counter }}</td>
+        <td class="border px-2 py-1">{{ producto.nombre }}</td>
+        <td class="border px-2 py-1">{{ producto.unidad_medida }}</td>
+        <td class="border px-2 py-1">
+          <a href="{% url 'kardex_producto_terminado' producto.id %}" class="bg-emerald-700 text-white px-3 py-1 rounded hover:bg-emerald-800 transition">
+            Ver Kardex
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="text-gray-500">No hay productos terminados registrados.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

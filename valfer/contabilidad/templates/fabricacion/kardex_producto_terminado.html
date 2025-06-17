@@ -1,9 +1,8 @@
 {% extends 'contabilidad/base.html' %}
-
-{% block title %}Kardex de {{ materia.nombre }}{% endblock %}
+{% block title %}Kardex de {{ producto.nombre }}{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-bold mb-4 text-center text-red-700">Kardex de {{ materia.nombre }}</h2>
+<h2 class="text-2xl font-bold mb-4 text-center text-red-700">Kardex de {{ producto.nombre }}</h2>
 
 <div class="overflow-x-auto">
   <table class="w-full text-sm border text-center">
@@ -29,14 +28,14 @@
           <td class="border px-2 py-1">{{ forloop.counter }}</td>
           <td class="border px-2 py-1">{{ mov.fecha }}</td>
           <td class="border px-2 py-1">{{ mov.concepto }}</td>
-          {% if mov.tipo_movimiento == 'entrada' %}
+          {% if mov.tipo_movimiento == 'ingreso' %}
             <td class="border px-2 py-1">{{ mov.cantidad|floatformat:2 }}</td>
             <td class="border px-2 py-1">{{ mov.costo_unitario|floatformat:2 }}</td>
             <td class="border px-2 py-1">{{ mov.total|floatformat:2 }}</td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
-          {% elif mov.tipo_movimiento in 'salida proceso' %}
+          {% elif mov.tipo_movimiento == 'salida' %}
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
@@ -60,7 +59,10 @@
     </tbody>
   </table>
 </div>
-<div class="mt-4">
-  <a href="{% url 'kardex_materia_prima_nuevo' materia.id %}" class="inline-block bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">Agregar Movimiento</a>
-</div>
+
+{% if fabricar_url and texto_boton %}
+  <a href="{% url fabricar_url %}" class="inline-block bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">
+    {{ texto_boton }}
+  </a>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'contabilidad/base.html' %}
+{% block title %}Embotellado exitoso{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white rounded shadow p-6 mt-4">
+  <h2 class="text-2xl text-center text-emerald-700 font-bold mb-4">¡Embotellado registrado exitosamente!</h2>
+  <ul class="mb-4">
+    <li><strong>Cantidad producida:</strong> {{ proceso.cantidad_producida }} botellas de 750ml</li>
+    <li><strong>Costo materia prima:</strong> ${{ proceso.costo_materia_prima|floatformat:2 }}</li>
+    <li><strong>Costo mano de obra:</strong> ${{ proceso.costo_mano_obra|floatformat:2 }}</li>
+    <li><strong>CIF (30%):</strong> ${{ proceso.cif|floatformat:2 }}</li>
+    <li><strong>Costo total:</strong> <span class="text-emerald-700 font-bold">${{ proceso.costo_total|floatformat:2 }}</span></li>
+  </ul>
+  <hr>
+  <div>
+    <p class="font-bold mt-2">Detalle de lotes de mezcla de licor consumidos:</p>
+    <ul>
+      {% for lote in consumido_lotes_licor %}
+      <li>Lote ID {{ lote.lote_id }}: {{ lote.cantidad }} litros × ${{ lote.costo_unitario }} = ${{ lote.total }}</li>
+      {% endfor %}
+    </ul>
+    <p class="font-bold mt-2">Detalle de lotes de botellas consumidos:</p>
+    <ul>
+      {% for lote in consumido_lotes_botellas %}
+      <li>Lote ID {{ lote.lote_id }}: {{ lote.cantidad }} unidades × ${{ lote.costo_unitario }} = ${{ lote.total }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="mt-6 text-center">
+    <a href="{% url 'kardex_producto_terminado' producto_id=proceso.producto_final.id %}" class="bg-cyan-700 text-white px-4 py-2 rounded">Ver Kardex de Licor de Café</a>
+  </div>
+</div>
+{% endblock %}

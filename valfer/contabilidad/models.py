@@ -138,7 +138,7 @@ class KardexMateriaPrima(models.Model):
     materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.CASCADE)
     fecha = models.DateField()
     tipo_movimiento = models.CharField(max_length=20, choices=[('entrada','Entrada'),('salida','Salida'),('proceso','Consumo Proceso')])
-    referencia = models.CharField(max_length=255, blank=True)  # Ej: factura, proceso, etc.
+    concepto = models.CharField(max_length=255, blank=True, null=True)  # Ej: factura, proceso, etc.
     cantidad = models.DecimalField(max_digits=12, decimal_places=2)
     costo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
     total = models.DecimalField(max_digits=12, decimal_places=2)
@@ -153,7 +153,7 @@ class KardexProductoTerminado(models.Model):
     producto = models.ForeignKey(ProductoTerminado, on_delete=models.CASCADE)
     fecha = models.DateField()
     tipo_movimiento = models.CharField(max_length=20, choices=[('ingreso','Ingreso Proceso'),('salida','Venta')])
-    referencia = models.CharField(max_length=255, blank=True)
+    concepto = models.CharField(max_length=255, blank=True, null=True)
     cantidad = models.DecimalField(max_digits=12, decimal_places=2)
     costo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
     total = models.DecimalField(max_digits=12, decimal_places=2)
@@ -182,3 +182,20 @@ class ConsumoMateriaPrima(models.Model):
 
     def __str__(self):
         return f"{self.materia_prima} ({self.cantidad_usada}) en {self.proceso}"
+
+class ProcesoFabricacion(models.Model):
+    TIPO_CHOICES = [
+        ('embolsar_cafe', 'Embolsar Café'),
+        ('mezclar_licor', 'Mezcla Café con Licor'),
+        ('embotellar_licor', 'Embotellado Café con Licor'),
+    ]
+    tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
+    fecha = models.DateField(auto_now_add=True)
+    producto_final = models.ForeignKey(ProductoTerminado, on_delete=models.CASCADE)
+    cantidad_producida = models.IntegerField()
+    gramos_usados = models.DecimalField(max_digits=10, decimal_places=2)
+    quintales_usados = models.DecimalField(max_digits=10, decimal_places=2)
+    costo_materia_prima = models.DecimalField(max_digits=12, decimal_places=2)
+    costo_mano_obra = models.DecimalField(max_digits=12, decimal_places=2)
+    cif = models.DecimalField(max_digits=12, decimal_places=2)
+    costo_total = models.DecimalField(max_digits=12, decimal_places=2)

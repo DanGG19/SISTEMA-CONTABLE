@@ -5,8 +5,9 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseNotAllowed
 from datetime import datetime
 from django.db.models import Sum
-from django.utils.timezone import now, timezone
-from decimal import Decimal
+from django.utils.timezone import now
+from django.utils import timezone
+from decimal import Decimal, InvalidOperation
 from datetime import date
 from calendar import monthrange
 from django.views.decorators.csrf import csrf_exempt
@@ -890,4 +891,494 @@ def calcular_existencias_peps(movimientos):
     return estado_por_movimiento
 
 
+#Views para lista de Kardex de Producto Terminado
+def listar_kardex_productos_terminados(request):
+    productos = ProductoTerminado.objects.all()
+    return render(request, 'fabricacion/lista_productos_terminados.html', {
+        'productos': productos,
+    })
 
+
+def kardex_producto_terminado(request, producto_id):
+    producto = get_object_or_404(ProductoTerminado, id=producto_id)
+    movimientos = KardexProductoTerminado.objects.filter(
+        producto=producto
+    ).order_by('fecha', 'id')
+    
+    movimientos_y_lotes = []
+    lotes_actuales = []
+    total_existencias = Decimal('0')
+    total_valor = Decimal('0')
+    
+    for mov in movimientos:
+        if mov.tipo_movimiento == 'ingreso':
+            lotes_actuales.append({'cantidad': mov.cantidad, 'costo_unitario': mov.costo_unitario})
+            total_existencias += mov.cantidad
+            total_valor += mov.cantidad * mov.costo_unitario
+        elif mov.tipo_movimiento == 'salida':
+            cantidad_a_sacar = mov.cantidad
+            valor_salida = Decimal('0')
+            detalle_lotes = []
+            i = 0
+            while cantidad_a_sacar > 0 and i < len(lotes_actuales):
+                lote = lotes_actuales[i]
+                consumir = min(lote['cantidad'], cantidad_a_sacar)
+                valor_salida += consumir * lote['costo_unitario']
+                detalle_lotes.append(f"{consumir}x{lote['costo_unitario']}")
+                lote['cantidad'] -= consumir
+                cantidad_a_sacar -= consumir
+                if lote['cantidad'] == 0:
+                    i += 1
+            lotes_actuales = [l for l in lotes_actuales if l['cantidad'] > 0]
+            total_existencias -= mov.cantidad
+            total_valor -= valor_salida
+        detalle_existencias = " + ".join(
+            [f"({l['cantidad']}*{l['costo_unitario']})" for l in lotes_actuales]
+        ) if lotes_actuales else ""
+        movimientos_y_lotes.append((
+            mov,
+            {
+                'unidades_totales': total_existencias,
+                'detalle': detalle_existencias,
+                'valor_total': total_valor,
+            }
+        ))
+
+    # -------- Lógica para el botón de fabricación --------
+    # Puedes cambiar los nombres exactos según tu base de datos y signals
+    nombre = producto.nombre.lower()
+    if "bolsa" in nombre:
+        fabricar_url = 'fabricar_embolsar_cafe'
+        texto_boton = 'Fabricar Bolsas de Café'
+    elif "mezcla" in nombre:
+        fabricar_url = 'fabricar_mezcla_licor'
+        texto_boton = 'Fabricar Mezcla de Licor de Café'
+    elif "licor" in nombre or "750ml" in nombre:
+        fabricar_url = 'fabricar_embotellar_licor'
+        texto_boton = 'Fabricar Licor de Café 750ml'
+    else:
+        fabricar_url = None
+        texto_boton = None
+
+    return render(request, 'fabricacion/kardex_producto_terminado.html', {
+        'producto': producto,
+        'movimientos_y_lotes': movimientos_y_lotes,
+        'fabricar_url': fabricar_url,
+        'texto_boton': texto_boton,
+    })
+
+def fabricar_embolsar_cafe(request):
+    if request.method == 'POST':
+        try:
+            bolsas_a_fabricar = int(request.POST['cantidad_bolsas'])
+            mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
+            horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
+        except (KeyError, ValueError, Decimal.InvalidOperation):
+            messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
+            return redirect('fabricar_embolsar_cafe')
+
+        # Validaciones básicas
+        if bolsas_a_fabricar <= 0:
+            messages.error(request, "La cantidad de bolsas debe ser mayor a cero.")
+            return redirect('fabricar_embolsar_cafe')
+        if mano_obra_por_hora < 0 or horas_trabajadas < 0:
+            messages.error(request, "El costo por hora y las horas trabajadas no pueden ser negativos.")
+            return redirect('fabricar_embolsar_cafe')
+
+        # Calcular materia prima necesaria
+        gramos_necesarios = Decimal(bolsas_a_fabricar) * Decimal('400')
+        quintales_necesarios = (gramos_necesarios / Decimal('100000')).quantize(Decimal('0.0001'))
+
+        materia_prima = get_object_or_404(MateriaPrima, nombre__iexact="Café en Quintales")
+        movimientos = KardexMateriaPrima.objects.filter(
+            materia_prima=materia_prima
+        ).order_by('fecha', 'id')
+
+        cantidad_restante = quintales_necesarios
+        costo_total_mp = Decimal('0')
+        consumido_lotes = []
+
+        for mov in movimientos:
+            if mov.saldo_cantidad > 0 and cantidad_restante > 0:
+                a_consumir = min(mov.saldo_cantidad, cantidad_restante)
+                costo_total_mp += a_consumir * mov.costo_unitario
+                consumido_lotes.append({
+                    "lote_id": mov.id,
+                    "cantidad": a_consumir,
+                    "costo_unitario": mov.costo_unitario,
+                    "total": (a_consumir * mov.costo_unitario).quantize(Decimal('0.01')),
+                })
+                # Registrar salida en KardexMateriaPrima por lote consumido
+                nueva_saldo_cantidad = mov.saldo_cantidad - a_consumir
+                nueva_saldo_total = mov.saldo_total - (a_consumir * mov.costo_unitario)
+                KardexMateriaPrima.objects.create(
+                    materia_prima=materia_prima,
+                    fecha=timezone.now(),
+                    tipo_movimiento='salida',
+                    concepto=f"Consumo para fabricación de bolsas",
+                    cantidad=a_consumir,
+                    costo_unitario=mov.costo_unitario,
+                    total=(a_consumir * mov.costo_unitario),
+                    saldo_cantidad=nueva_saldo_cantidad,
+                    saldo_total=nueva_saldo_total,
+                )
+                # Actualizar el saldo del movimiento original
+                mov.saldo_cantidad = nueva_saldo_cantidad
+                mov.saldo_total = nueva_saldo_total
+                mov.save()
+                cantidad_restante -= a_consumir
+            if cantidad_restante <= 0:
+                break
+
+        if cantidad_restante > 0:
+            messages.error(request, "No hay suficiente café en inventario para fabricar esa cantidad de bolsas.")
+            return redirect('fabricar_embolsar_cafe')
+
+        # Cálculo de mano de obra y CIF
+        costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
+        cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
+        costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
+
+        producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Bolsa Café 400g")
+        proceso = ProcesoFabricacion.objects.create(
+            tipo='embolsar_cafe',
+            producto_final=producto_final,
+            cantidad_producida=bolsas_a_fabricar,
+            gramos_usados=gramos_necesarios,
+            quintales_usados=quintales_necesarios,
+            costo_materia_prima=costo_total_mp,
+            costo_mano_obra=costo_mano_obra,
+            cif=cif,
+            costo_total=costo_total
+        )
+
+        # Kardex de producto terminado (entrada)
+        ultimo_kardex = KardexProductoTerminado.objects.filter(
+            producto=producto_final
+        ).order_by('-fecha', '-id').first()
+        saldo_cantidad = (ultimo_kardex.saldo_cantidad if ultimo_kardex else Decimal('0')) + Decimal(bolsas_a_fabricar)
+        saldo_total = (ultimo_kardex.saldo_total if ultimo_kardex else Decimal('0')) + costo_total
+
+        KardexProductoTerminado.objects.create(
+            producto=producto_final,
+            fecha=timezone.now(),
+            tipo_movimiento='ingreso',
+            concepto=f"Fabricación por proceso {proceso.id}",
+            cantidad=Decimal(bolsas_a_fabricar),
+            costo_unitario=(costo_total / Decimal(bolsas_a_fabricar)).quantize(Decimal('0.01')),
+            total=costo_total,
+            saldo_cantidad=saldo_cantidad,
+            saldo_total=saldo_total,
+        )
+
+        messages.success(request, f"Fabricación registrada exitosamente. Costo total: ${costo_total:,.2f}")
+        return render(request, 'fabricacion/fabricar_embolsar_cafe_exito.html', {
+            'proceso': proceso,
+            'consumido_lotes': consumido_lotes,
+        })
+
+    return render(request, 'fabricacion/fabricar_embolsar_cafe.html')
+
+
+#view para fabricar licor
+def fabricar_mezcla_licor(request):
+    if request.method == 'POST':
+        try:
+            litros_a_fabricar = Decimal(request.POST['cantidad_litros'])
+            mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
+            horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
+        except (KeyError, ValueError, Decimal.InvalidOperation):
+            messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
+            return redirect('fabricar_mezclar_licor')
+
+        # Proporciones por cada 400 litros de mezcla:
+        litros_por_quintal = Decimal('400')
+        litros_por_botella_licor = Decimal('40')  # Por cada 400 litros: 10 litros licor, 400/10 = 40
+
+        # Calcula insumos proporcionales
+        cafe_quintales_necesarios = (litros_a_fabricar / litros_por_quintal).quantize(Decimal('0.0001'))
+        licor_litros_necesarios = (litros_a_fabricar / 40).quantize(Decimal('0.0001'))
+
+        # --- CAFÉ ---
+        cafe = get_object_or_404(MateriaPrima, nombre="Café en Quintales")
+        movimientos_cafe = KardexMateriaPrima.objects.filter(
+            materia_prima=cafe
+        ).order_by('fecha', 'id')
+
+        cantidad_cafe_restante = cafe_quintales_necesarios
+        costo_total_cafe = Decimal('0')
+        lotes_cafe = []
+
+        for mov in movimientos_cafe:
+            if mov.saldo_cantidad > 0 and cantidad_cafe_restante > 0:
+                a_consumir = min(mov.saldo_cantidad, cantidad_cafe_restante)
+                costo_total_cafe += a_consumir * mov.costo_unitario
+                lotes_cafe.append({
+                    "lote_id": mov.id,
+                    "cantidad": a_consumir,
+                    "costo_unitario": mov.costo_unitario,
+                    "total": (a_consumir * mov.costo_unitario).quantize(Decimal('0.01')),
+                })
+                mov.saldo_cantidad -= a_consumir
+                mov.saldo_total -= a_consumir * mov.costo_unitario
+                mov.save()
+                # Registrar salida en Kardex
+                KardexMateriaPrima.objects.create(
+                    materia_prima=cafe,
+                    fecha=timezone.now(),
+                    tipo_movimiento='salida',
+                    concepto="Consumo para mezcla de licor",
+                    cantidad=a_consumir,
+                    costo_unitario=mov.costo_unitario,
+                    total=a_consumir * mov.costo_unitario,
+                    saldo_cantidad=mov.saldo_cantidad,
+                    saldo_total=mov.saldo_total,
+                )
+                cantidad_cafe_restante -= a_consumir
+            if cantidad_cafe_restante <= 0:
+                break
+
+        # --- LICOR ---
+        licor = get_object_or_404(MateriaPrima, nombre="Botella de licor")
+        movimientos_licor = KardexMateriaPrima.objects.filter(
+            materia_prima=licor
+        ).order_by('fecha', 'id')
+
+        cantidad_licor_restante = licor_litros_necesarios
+        costo_total_licor = Decimal('0')
+        lotes_licor = []
+
+        for mov in movimientos_licor:
+            if mov.saldo_cantidad > 0 and cantidad_licor_restante > 0:
+                a_consumir = min(mov.saldo_cantidad, cantidad_licor_restante)
+                costo_total_licor += a_consumir * mov.costo_unitario
+                lotes_licor.append({
+                    "lote_id": mov.id,
+                    "cantidad": a_consumir,
+                    "costo_unitario": mov.costo_unitario,
+                    "total": (a_consumir * mov.costo_unitario).quantize(Decimal('0.01')),
+                })
+                mov.saldo_cantidad -= a_consumir
+                mov.saldo_total -= a_consumir * mov.costo_unitario
+                mov.save()
+                KardexMateriaPrima.objects.create(
+                    materia_prima=licor,
+                    fecha=timezone.now(),
+                    tipo_movimiento='salida',
+                    concepto="Consumo para mezcla de licor",
+                    cantidad=a_consumir,
+                    costo_unitario=mov.costo_unitario,
+                    total=a_consumir * mov.costo_unitario,
+                    saldo_cantidad=mov.saldo_cantidad,
+                    saldo_total=mov.saldo_total,
+                )
+                cantidad_licor_restante -= a_consumir
+            if cantidad_licor_restante <= 0:
+                break
+
+        # Mano de obra y CIF
+        costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
+        costo_total_mp = (costo_total_cafe + costo_total_licor).quantize(Decimal('0.01'))
+        cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
+        costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
+
+        producto_final = get_object_or_404(ProductoTerminado, nombre="Mezcla de Licor de Café")
+        proceso = ProcesoFabricacion.objects.create(
+            tipo='mezclar_licor',
+            producto_final=producto_final,
+            cantidad_producida=litros_a_fabricar,
+            gramos_usados=Decimal('0'),  # no aplica aquí
+            quintales_usados=cafe_quintales_necesarios,
+            costo_materia_prima=costo_total_mp,
+            costo_mano_obra=costo_mano_obra,
+            cif=cif,
+            costo_total=costo_total
+        )
+
+        # Kardex de producto terminado (entrada)
+        ultimo_kardex = KardexProductoTerminado.objects.filter(
+            producto=producto_final
+        ).order_by('-fecha', '-id').first()
+        saldo_cantidad = (ultimo_kardex.saldo_cantidad if ultimo_kardex else Decimal('0')) + litros_a_fabricar
+        saldo_total = (ultimo_kardex.saldo_total if ultimo_kardex else Decimal('0')) + costo_total
+
+        KardexProductoTerminado.objects.create(
+            producto=producto_final,
+            fecha=timezone.now(),
+            tipo_movimiento='ingreso',
+            concepto=f"Fabricación por proceso {proceso.id}",
+            cantidad=litros_a_fabricar,
+            costo_unitario=(costo_total / litros_a_fabricar).quantize(Decimal('0.01')),
+            total=costo_total,
+            saldo_cantidad=saldo_cantidad,
+            saldo_total=saldo_total,
+        )
+
+        return render(request, 'fabricacion/fabricar_mezclar_licor_exito.html', {
+            'proceso': proceso,
+            'cafe_usado_quintales': cafe_quintales_necesarios,
+            'licor_usado_litros': licor_litros_necesarios,
+            'lotes_cafe': lotes_cafe,
+            'lotes_licor': lotes_licor,
+        })
+
+    return render(request, 'fabricacion/fabricar_mezclar_licor.html')
+
+
+#View para embotellar licor
+def fabricar_embotellar_licor(request):
+    if request.method == 'POST':
+        try:
+            botellas_a_fabricar = int(request.POST['cantidad_botellas'])
+            mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
+            horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
+        except (KeyError, ValueError, Decimal.InvalidOperation):
+            messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
+            return redirect('fabricar_embotellar_licor')
+
+        if botellas_a_fabricar <= 0:
+            messages.error(request, "La cantidad de botellas debe ser mayor a cero.")
+            return redirect('fabricar_embotellar_licor')
+        if mano_obra_por_hora < 0 or horas_trabajadas < 0:
+            messages.error(request, "El costo por hora y las horas trabajadas no pueden ser negativos.")
+            return redirect('fabricar_embotellar_licor')
+
+        # Cada botella necesita 0.75 litros de mezcla y 1 botella vacía
+        litros_mezcla_necesarios = Decimal(botellas_a_fabricar) * Decimal('0.75')
+        botellas_vacias_necesarias = Decimal(botellas_a_fabricar)
+
+        # --- CONSUMO MEZCLA DE LICOR ---
+        materia_prima_mezcla = get_object_or_404(ProductoTerminado, nombre__iexact="Mezcla de Licor de Café")
+        movimientos_mezcla = KardexProductoTerminado.objects.filter(
+            producto=materia_prima_mezcla
+        ).order_by('fecha', 'id')
+
+        cantidad_restante_mezcla = litros_mezcla_necesarios
+        costo_total_mezcla = Decimal('0')
+        consumido_lotes_mezcla = []
+
+        for mov in movimientos_mezcla:
+            if mov.saldo_cantidad > 0 and cantidad_restante_mezcla > 0:
+                a_consumir = min(mov.saldo_cantidad, cantidad_restante_mezcla)
+                costo_total_mezcla += a_consumir * mov.costo_unitario
+                consumido_lotes_mezcla.append({
+                    "lote_id": mov.id,
+                    "cantidad": a_consumir,
+                    "costo_unitario": mov.costo_unitario,
+                    "total": (a_consumir * mov.costo_unitario).quantize(Decimal('0.01')),
+                })
+                nueva_saldo_cantidad = mov.saldo_cantidad - a_consumir
+                nueva_saldo_total = mov.saldo_total - (a_consumir * mov.costo_unitario)
+                KardexProductoTerminado.objects.create(
+                    producto=materia_prima_mezcla,
+                    fecha=timezone.now(),
+                    tipo_movimiento='salida',
+                    concepto=f"Consumo para embotellado de licor",
+                    cantidad=a_consumir,
+                    costo_unitario=mov.costo_unitario,
+                    total=(a_consumir * mov.costo_unitario),
+                    saldo_cantidad=nueva_saldo_cantidad,
+                    saldo_total=nueva_saldo_total,
+                )
+                mov.saldo_cantidad = nueva_saldo_cantidad
+                mov.saldo_total = nueva_saldo_total
+                mov.save()
+                cantidad_restante_mezcla -= a_consumir
+            if cantidad_restante_mezcla <= 0:
+                break
+
+        if cantidad_restante_mezcla > 0:
+            messages.error(request, "No hay suficiente mezcla de licor para fabricar esa cantidad de botellas.")
+            return redirect('fabricar_embotellar_licor')
+
+        # --- CONSUMO BOTELLAS VACÍAS ---
+        materia_prima_botella = get_object_or_404(MateriaPrima, nombre__iexact="Botellas de vidrio de 750ml")
+        movimientos_botella = KardexMateriaPrima.objects.filter(
+            materia_prima=materia_prima_botella
+        ).order_by('fecha', 'id')
+
+        cantidad_restante_botella = botellas_vacias_necesarias
+        costo_total_botellas = Decimal('0')
+        consumido_lotes_botella = []
+
+        for mov in movimientos_botella:
+            if mov.saldo_cantidad > 0 and cantidad_restante_botella > 0:
+                a_consumir = min(mov.saldo_cantidad, cantidad_restante_botella)
+                costo_total_botellas += a_consumir * mov.costo_unitario
+                consumido_lotes_botella.append({
+                    "lote_id": mov.id,
+                    "cantidad": a_consumir,
+                    "costo_unitario": mov.costo_unitario,
+                    "total": (a_consumir * mov.costo_unitario).quantize(Decimal('0.01')),
+                })
+                nueva_saldo_cantidad = mov.saldo_cantidad - a_consumir
+                nueva_saldo_total = mov.saldo_total - (a_consumir * mov.costo_unitario)
+                KardexMateriaPrima.objects.create(
+                    materia_prima=materia_prima_botella,
+                    fecha=timezone.now(),
+                    tipo_movimiento='salida',
+                    concepto=f"Consumo para embotellado de licor",
+                    cantidad=a_consumir,
+                    costo_unitario=mov.costo_unitario,
+                    total=(a_consumir * mov.costo_unitario),
+                    saldo_cantidad=nueva_saldo_cantidad,
+                    saldo_total=nueva_saldo_total,
+                )
+                mov.saldo_cantidad = nueva_saldo_cantidad
+                mov.saldo_total = nueva_saldo_total
+                mov.save()
+                cantidad_restante_botella -= a_consumir
+            if cantidad_restante_botella <= 0:
+                break
+
+        if cantidad_restante_botella > 0:
+            messages.error(request, "No hay suficientes botellas vacías en inventario.")
+            return redirect('fabricar_embotellar_licor')
+
+        # --- MANO DE OBRA Y CIF ---
+        costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
+        costo_total_mp = costo_total_mezcla + costo_total_botellas
+        cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
+        costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
+
+        # --- REGISTRO DE PROCESO ---
+        producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Licor de Café 750ml")
+        proceso = ProcesoFabricacion.objects.create(
+            tipo='embotellar_licor',
+            producto_final=producto_final,
+            cantidad_producida=botellas_a_fabricar,
+            gramos_usados=litros_mezcla_necesarios,  # Guardamos litros usados en este campo
+            quintales_usados=botellas_vacias_necesarias,  # Guardamos botellas usadas en este campo
+            costo_materia_prima=costo_total_mp,
+            costo_mano_obra=costo_mano_obra,
+            cif=cif,
+            costo_total=costo_total
+        )
+
+        # --- ENTRADA AL KARDEX DE PRODUCTO TERMINADO ---
+        ultimo_kardex = KardexProductoTerminado.objects.filter(
+            producto=producto_final
+        ).order_by('-fecha', '-id').first()
+        saldo_cantidad = (ultimo_kardex.saldo_cantidad if ultimo_kardex else Decimal('0')) + Decimal(botellas_a_fabricar)
+        saldo_total = (ultimo_kardex.saldo_total if ultimo_kardex else Decimal('0')) + costo_total
+
+        KardexProductoTerminado.objects.create(
+            producto=producto_final,
+            fecha=timezone.now(),
+            tipo_movimiento='ingreso',
+            concepto=f"Embotellado por proceso {proceso.id}",
+            cantidad=Decimal(botellas_a_fabricar),
+            costo_unitario=(costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.01')),
+            total=costo_total,
+            saldo_cantidad=saldo_cantidad,
+            saldo_total=saldo_total,
+        )
+
+        messages.success(request, f"Embotellado registrado exitosamente. Costo total: ${costo_total:,.2f}")
+        return render(request, 'fabricacion/fabricar_embotellar_licor_exito.html', {
+            'proceso': proceso,
+            'consumido_lotes_mezcla': consumido_lotes_mezcla,
+            'consumido_lotes_botella': consumido_lotes_botella,
+        })
+
+    return render(request, 'fabricacion/fabricar_embotellar_licor.html')

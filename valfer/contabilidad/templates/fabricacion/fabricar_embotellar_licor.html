@@ -1,0 +1,21 @@
+{% extends 'contabilidad/base.html' %}
+{% block title %}Embotellado de Licor de Café{% endblock %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-4 text-center text-emerald-700">Embotellado de Licor de Café</h2>
+<form method="post" class="mx-auto max-w-lg bg-white shadow rounded p-6 space-y-4">
+  {% csrf_token %}
+  <div>
+    <label class="block font-semibold">Cantidad de botellas de 750ml a fabricar:</label>
+    <input type="number" name="cantidad_botellas" min="1" step="1" class="w-full border p-2 rounded" required>
+  </div>
+  <div>
+    <label class="block font-semibold">Costo mano de obra ($) por hora:</label>
+    <input type="number" name="mano_obra_por_hora" min="0" step="0.01" class="w-full border p-2 rounded" required>
+  </div>
+  <div>
+    <label class="block font-semibold">Cantidad de horas trabajadas:</label>
+    <input type="number" name="horas_trabajadas" min="0" step="0.01" class="w-full border p-2 rounded" required>
+  </div>
+  <button type="submit" class="bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">Registrar Embotellado</button>
+</form>
+{% endblock %}

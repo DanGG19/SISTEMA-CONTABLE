@@ -1,0 +1,32 @@
+{% extends 'contabilidad/base.html' %}
+{% block title %}Fabricación Exitosa{% endblock %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-4 text-green-700">¡Fabricación exitosa!</h2>
+<p>Se fabricaron <b>{{ proceso.cantidad_producida }}</b> bolsas de 400g.</p>
+<ul class="mt-2 mb-4">
+  <li>Gramos usados: <b>{{ proceso.gramos_usados|floatformat:0 }}</b></li>
+  <li>Quintales usados: <b>{{ proceso.quintales_usados|floatformat:2 }}</b></li>
+  <li>Costo Materia Prima: $<b>{{ proceso.costo_materia_prima|floatformat:2 }}</b></li>
+  <li>Costo Mano de Obra: $<b>{{ proceso.costo_mano_obra|floatformat:2 }}</b></li>
+  <li>CIF (30%): $<b>{{ proceso.cif|floatformat:2 }}</b></li>
+  <li><b>Costo total lote: ${{ proceso.costo_total|floatformat:2 }}</b></li>
+</ul>
+<h3 class="font-bold">Detalle de lotes de café utilizados (PEPS):</h3>
+<table class="w-full border text-center my-2">
+  <tr class="bg-cyan-900 text-white">
+    <th class="border px-2 py-1">Lote Kardex ID</th>
+    <th class="border px-2 py-1">Cantidad usada (q)</th>
+    <th class="border px-2 py-1">Costo Unitario</th>
+    <th class="border px-2 py-1">Subtotal</th>
+  </tr>
+  {% for l in consumido_lotes %}
+  <tr>
+    <td class="border px-2 py-1">{{ l.lote_id }}</td>
+    <td class="border px-2 py-1">{{ l.cantidad|floatformat:2 }}</td>
+    <td class="border px-2 py-1">${{ l.costo_unitario|floatformat:2 }}</td>
+    <td class="border px-2 py-1">${{ l.total|floatformat:2 }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<a href="{% url 'kardex_producto_terminado' proceso.producto_final.id %}" class="bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition mt-4 inline-block">Ir al Kardex de Producto Terminado</a>
+{% endblock %}

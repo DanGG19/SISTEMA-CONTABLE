@@ -88,7 +88,7 @@ class DetallePlanillaForm(forms.ModelForm):
 class KardexMateriaPrimaForm(forms.ModelForm):
     class Meta:
         model = KardexMateriaPrima
-        fields = ['fecha', 'tipo_movimiento', 'referencia', 'cantidad', 'costo_unitario']
+        fields = ['fecha', 'tipo_movimiento', 'concepto', 'cantidad', 'costo_unitario']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
         }

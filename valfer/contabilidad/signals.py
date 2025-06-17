@@ -97,3 +97,35 @@ def crear_materias_primas_iniciales(sender, **kwargs):
                 logger.info(f"Materia Prima creada: {materia_prima.nombre}")
             else:
                 logger.info(f"Materia Prima ya existe: {materia_prima.nombre}")
+
+# Signal para crear productos terminados automáticamente
+@receiver(post_migrate)
+def crear_productos_terminados_iniciales(sender, **kwargs):
+    """
+    Crea productos terminados predefinidos después de ejecutar las migraciones
+    """
+    if sender.name == 'contabilidad':
+        productos_terminados_iniciales = [
+            {
+                'nombre': 'Bolsa Café 400g',  # Debe coincidir con el que busca tu view
+                'unidad_medida': 'bolsa'
+            },
+             {
+                'nombre': 'Mezcla de Licor de Café',  # <--- ¡Agrega esto!
+                'unidad_medida': 'litro'
+            },
+            {
+                'nombre': 'Licor de Café 750ml',
+                'unidad_medida': 'botella'
+            }
+        ]
+        
+        for producto_data in productos_terminados_iniciales:
+            producto, created = ProductoTerminado.objects.get_or_create(
+                nombre=producto_data['nombre'],
+                defaults=producto_data
+            )
+            if created:
+                logger.info(f"Producto Terminado creado: {producto.nombre}")
+            else:
+                logger.info(f"Producto Terminado ya existe: {producto.nombre}")

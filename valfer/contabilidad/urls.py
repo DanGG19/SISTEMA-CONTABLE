@@ -38,6 +38,17 @@ urlpatterns = [
     #Inventario tipo de Kardex PEPS
     path('kardex/<int:materia_prima_id>/', views.kardex_materia_prima_list, name='kardex_materia_prima_list'),
     path('kardex/<int:materia_prima_id>/nuevo/', views.kardex_materia_prima_nuevo, name='kardex_materia_prima_nuevo'),
+    #Listar Kardex de Producto Terminado
+    path('kardex/productos_terminados/', views.listar_kardex_productos_terminados, name='listar_kardex_productos_terminados'),
+    #embolsar café
+    path('kardex/embolsar_cafe/', views.fabricar_embolsar_cafe, name='fabricar_embolsar_cafe'),
+    #mezclar café
+    path('kardex/mezclar_licor/', views.fabricar_mezcla_licor, name='fabricar_mezcla_licor'),
+    #embotellar café
+    path('kardex/embotellar_licor/', views.fabricar_embotellar_licor, name='fabricar_embotellar_licor'),
+    #Inventario tipo de Kardex para café PEPS para Producto Terminado
+    path('kardex/producto/<int:producto_id>/', views.kardex_producto_terminado, name='kardex_producto_terminado'),
+    
 
 
 
