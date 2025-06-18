@@ -258,4 +258,40 @@ Registrar Asiento Contable
     updateTotals()
   })
 </script>
+
+<!-- Select2 CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Inicializar select2 para los selects existentes
+    document.querySelectorAll('.select-cuenta').forEach(function (el) {
+      $(el).select2({
+        width: '100%',
+        placeholder: 'Buscar cuenta contable',
+      });
+    });
+
+    // Cuando agregues nuevas filas, inicializar select2 también para ellas
+    const observer = new MutationObserver(function (mutationsList) {
+      mutationsList.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === 1) {
+            const newSelect = node.querySelector('.select-cuenta');
+            if (newSelect) {
+              $(newSelect).select2({
+                width: '100%',
+                placeholder: 'Buscar cuenta contable',
+              });
+            }
+          }
+        });
+      });
+    });
+
+    observer.observe(document.getElementById('detalle-body'), { childList: true });
+  });
+</script>
 {% endblock %}

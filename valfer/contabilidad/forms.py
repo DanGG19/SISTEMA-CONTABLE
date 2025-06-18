@@ -20,6 +20,7 @@ class DetalleAsientoForm(forms.ModelForm):
         fields = ['fecha', 'descripcion', 'cuenta', 'debe', 'haber']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
+            'cuenta': forms.Select(attrs={'class': 'select-cuenta'}),
         }
 
     def __init__(self, *args, **kwargs):
