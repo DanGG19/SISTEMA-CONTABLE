@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
 
     <!-- NAVBAR -->
     <nav class="bg-amber-900 text-white shadow-md">
@@ -28,7 +28,8 @@
     </nav>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <main class="p-6 max-w-7xl mx-auto">
+    <main class="p-6 max-w-screen-xl mx-auto flex-grow w-full">
+
         {% block content %}
         <!-- Aquí va el contenido dinámico -->
         {% endblock %}
