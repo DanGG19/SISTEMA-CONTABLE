@@ -15,10 +15,10 @@ urlpatterns = [
     path('asientos/', views.listar_asientos, name='listar_asientos'),
     path('asientos/<int:asiento_id>/', views.ver_asiento, name='ver_asiento'),
     path('asientos/<int:asiento_id>/eliminar/', views.eliminar_asiento, name='eliminar_asiento'),
-    path('iva/calcular/', views.calcular_iva, name='calcular_iva'),
-    path('ajustes/nuevo/', views.crear_ajuste, name='crear_ajuste'),
-    path('cierre-contable/', views.cierre_contable, name='cierre_contable'),
     path('libro-mayor/', views.libro_mayor, name='libro_mayor'),
+    
+    #Para estados financieros
+    path('hoja_trabajo/', views.hoja_trabajo, name='hoja_trabajo'),
     
 
     # Rutas para Planillas
@@ -28,12 +28,8 @@ urlpatterns = [
     path('planillas/', listar_planillas, name='listar_planillas'),
     path('planillas/<int:planilla_id>/eliminar/', eliminar_planilla, name='eliminar_planilla'),
 
-    #Para estados financieros
-    path('estados-financieros/balance/', views.balance_general, name='balance_general'),
-    path('estados-financieros/listar-balances/', views.listar_balances, name='listar_balances'),
-    path('estados-financieros/resultado/', views.estado_resultados, name='estado_resultados'),
-    path('estados-financieros/listar-resultados/', views.listar_resultados, name='listar_resultados'),
-    path('estados-financieros/listar-resultados/resultados/<int:resultado_id>/', views.ver_resultado, name='ver_resultado'),
+
+
 
     #Kardex home
     path('kardex/', views.kardex_home, name='kardex_home'),

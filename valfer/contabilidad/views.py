@@ -4,17 +4,16 @@ from .forms import *
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseNotAllowed
 from datetime import datetime
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.utils.timezone import now
 from django.utils import timezone
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation
 from datetime import date
 from calendar import monthrange
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from .utils import crear_asiento_venta
 
 def home(request):
     return render(request, 'contabilidad/home.html')
@@ -27,6 +26,9 @@ def catalogo_cuentas(request):
 
     return render(request, 'contabilidad/catalogo.html', {'cuentas': cuentas})
 
+
+from django.http import JsonResponse
+from .models import AsientoContable
 
 def contar_asientos_por_fecha(request, fecha):
     try:
@@ -298,479 +300,95 @@ def eliminar_planilla(request, planilla_id):
     return redirect('listar_planillas')
 
 
-#Views para el Balance General
+#ViewS PARA hora de trabajo
+def hoja_trabajo(request):
+    # Filtros de periodo
+    periodo_inicio = request.GET.get('inicio')
+    periodo_fin = request.GET.get('fin')
+    filtro_fecha = Q()
+    if periodo_inicio and periodo_fin:
+        filtro_fecha = Q(fecha__range=[periodo_inicio, periodo_fin])
 
-def balance_general(request):
-    tipo = request.GET.get('tipo', 'mensual')
-    anio = int(request.GET.get('anio', date.today().year))
-    mes = int(request.GET.get('mes', date.today().month))
-
-    # Definir rango de fechas
-    if tipo == 'mensual':
-        fecha_inicio = date(anio, mes, 1)
-        ultimo_dia = monthrange(anio, mes)[1]
-        fecha_fin = date(anio, mes, ultimo_dia)
-    elif tipo == 'trimestral':
-        trimestre = (mes - 1) // 3 + 1
-        mes_inicio = (trimestre - 1) * 3 + 1
-        mes_fin = mes_inicio + 2
-        fecha_inicio = date(anio, mes_inicio, 1)
-        ultimo_dia = monthrange(anio, mes_fin)[1]
-        fecha_fin = date(anio, mes_fin, ultimo_dia)
-    elif tipo == 'anual':
-        fecha_inicio = date(anio, 1, 1)
-        fecha_fin = date(anio, 12, 31)
-    else:
-        fecha_inicio = None
-        fecha_fin = None
-
-    detalles = DetalleAsiento.objects.filter(fecha__range=[fecha_inicio, fecha_fin])
-
-    # Calcular saldos por tipo de cuenta (solo si ≠ 0)
+    # --- Formulario de ajuste manual ---
     cuentas = CuentaContable.objects.all().order_by('codigo')
-    resumen = {'activo': [], 'pasivo': [], 'patrimonio': []}
-    totales = {'activo': 0, 'pasivo': 0, 'patrimonio': 0}
-
-    for cuenta in cuentas:
-        saldos = detalles.filter(cuenta=cuenta).aggregate(
-            debe=Sum('debe') or 0,
-            haber=Sum('haber') or 0
-        )
-        saldo = (saldos['debe'] or 0) - (saldos['haber'] or 0)
-
-        if saldo != 0:
-            if cuenta.tipo == 'activo':
-                resumen['activo'].append({'cuenta': cuenta, 'saldo': saldo})
-                totales['activo'] += saldo
-            elif cuenta.tipo == 'pasivo':
-                resumen['pasivo'].append({'cuenta': cuenta, 'saldo': -saldo})
-                totales['pasivo'] += -saldo
-            elif cuenta.tipo == 'patrimonio':
-                resumen['patrimonio'].append({'cuenta': cuenta, 'saldo': -saldo})
-                totales['patrimonio'] += -saldo
-
-    # Guardar el balance si es POST
     if request.method == 'POST':
-        balance = BalanceGeneral.objects.create(
-            fecha_inicio=fecha_inicio,
-            fecha_fin=fecha_fin,
-            total_activo=totales['activo'],
-            total_pasivo=totales['pasivo'],
-            total_patrimonio=totales['patrimonio'],
-        )
+        cuenta_id = request.POST.get('cuenta')
+        debe = float(request.POST.get('debe', 0) or 0)
+        haber = float(request.POST.get('haber', 0) or 0)
+        descripcion = request.POST.get('descripcion', 'ajuste manual').strip() or 'ajuste manual'
 
-        for tipo in resumen:
-            for item in resumen[tipo]:
-                DetalleBalance.objects.create(
-                    balance=balance,
-                    cuenta=item['cuenta'],
-                    saldo=item['saldo'],
-                )
-        return redirect('listar_balances')  # Ajusta la URL según tu proyecto
+        if cuenta_id and (debe > 0 or haber > 0):
+            cuenta = CuentaContable.objects.get(id=cuenta_id)
+            # Crea un asiento para el ajuste manual
+            asiento = AsientoContable.objects.create(
+                fecha=timezone.now().date(),
+                descripcion=descripcion
+            )
+            DetalleAsiento.objects.create(
+                asiento=asiento,
+                fecha=asiento.fecha,
+                descripcion=descripcion,
+                cuenta=cuenta,
+                debe=debe,
+                haber=haber
+            )
+        return redirect('hoja_trabajo')  # Cambia por el name de tu urlpattern
 
-    return render(request, 'estados/balance_general.html', {
-        'resumen': resumen,
-        'total_activo': totales['activo'],
-        'total_pasivo': totales['pasivo'],
-        'total_patrimonio': totales['patrimonio'],
-        'fecha_inicio': fecha_inicio,
-        'fecha_fin': fecha_fin,
-        'anio': anio,
-        'tipo': tipo,
-        'mes': mes,
-    })
+    # --- Calcular movimientos por cuenta ---
+    datos = []
+    for cuenta in cuentas:
+        debe = DetalleAsiento.objects.filter(cuenta=cuenta).filter(filtro_fecha).aggregate(Sum('debe'))['debe__sum'] or 0
+        haber = DetalleAsiento.objects.filter(cuenta=cuenta).filter(filtro_fecha).aggregate(Sum('haber'))['haber__sum'] or 0
 
+        ajuste_debe = DetalleAsiento.objects.filter(
+            cuenta=cuenta,
+            asiento__descripcion__icontains='ajuste'
+        ).filter(filtro_fecha).aggregate(Sum('debe'))['debe__sum'] or 0
 
-def listar_balances(request):
-    balances = BalanceGeneral.objects.all().order_by('-fecha_generado')
-    return render(request, 'estados/listar_balances.html', {'balances': balances})
+        ajuste_haber = DetalleAsiento.objects.filter(
+            cuenta=cuenta,
+            asiento__descripcion__icontains='ajuste'
+        ).filter(filtro_fecha).aggregate(Sum('haber'))['haber__sum'] or 0
 
-#View para estado de resultados
-def estado_resultados(request):
-    tipos_periodo = [
-        ("mensual", "Mensual"),
-        ("trimestral", "Trimestral"),
-        ("anual", "Anual"),
+        ajustado_debe = debe + ajuste_debe
+        ajustado_haber = haber + ajuste_haber
+
+        datos.append({
+            'cuenta': cuenta,
+            'debe': debe,
+            'haber': haber,
+            'ajuste_debe': ajuste_debe,
+            'ajuste_haber': ajuste_haber,
+            'ajustado_debe': ajustado_debe,
+            'ajustado_haber': ajustado_haber,
+            'tipo': cuenta.tipo,
+        })
+
+    # Mostrar solo cuentas con movimiento distinto de cero
+    datos = [
+        x for x in datos
+        if x['debe'] or x['haber'] or x['ajuste_debe'] or x['ajuste_haber'] or x['ajustado_debe'] or x['ajustado_haber']
     ]
 
-    tipo = request.GET.get('tipo', 'mensual')
-    anio = int(request.GET.get('anio', date.today().year))
-    mes = int(request.GET.get('mes', date.today().month))
+    total_debe = sum(x['debe'] for x in datos)
+    total_haber = sum(x['haber'] for x in datos)
+    total_ajuste_debe = sum(x['ajuste_debe'] for x in datos)
+    total_ajuste_haber = sum(x['ajuste_haber'] for x in datos)
+    total_ajustado_debe = sum(x['ajustado_debe'] for x in datos)
+    total_ajustado_haber = sum(x['ajustado_haber'] for x in datos)
 
-    # Calcular rango de fechas
-    if tipo == 'mensual':
-        fecha_inicio = date(anio, mes, 1)
-        ultimo_dia = monthrange(anio, mes)[1]
-        fecha_fin = date(anio, mes, ultimo_dia)
-    elif tipo == 'trimestral':
-        trimestre = (mes - 1) // 3 + 1
-        mes_inicio = (trimestre - 1) * 3 + 1
-        mes_fin = mes_inicio + 2
-        fecha_inicio = date(anio, mes_inicio, 1)
-        ultimo_dia = monthrange(anio, mes_fin)[1]
-        fecha_fin = date(anio, mes_fin, ultimo_dia)
-    elif tipo == 'anual':
-        fecha_inicio = date(anio, 1, 1)
-        fecha_fin = date(anio, 12, 31)
+    context = {
+        'datos': datos,
+        'cuentas': cuentas,
+        'total_debe': total_debe,
+        'total_haber': total_haber,
+        'total_ajuste_debe': total_ajuste_debe,
+        'total_ajuste_haber': total_ajuste_haber,
+        'total_ajustado_debe': total_ajustado_debe,
+        'total_ajustado_haber': total_ajustado_haber,
+    }
+    return render(request, 'estados/hoja_trabajo.html', context)
 
-    detalles = DetalleAsiento.objects.filter(fecha__range=[fecha_inicio, fecha_fin])
-
-    # Calcular ingresos y gastos
-    ingresos = []
-    gastos = []
-    total_ingresos = 0
-    total_gastos = 0
-
-    cuentas = CuentaContable.objects.all().order_by('codigo')
-
-    for cuenta in cuentas:
-        saldos = detalles.filter(cuenta=cuenta).aggregate(
-            debe=Sum('debe') or 0,
-            haber=Sum('haber') or 0
-        )
-        saldo = (saldos['haber'] or 0) - (saldos['debe'] or 0)
-
-        if cuenta.tipo == 'ingreso' and saldo != 0:
-            ingresos.append({'cuenta': cuenta, 'saldo': saldo})
-            total_ingresos += saldo
-        elif cuenta.tipo in ['gasto', 'costo'] and saldo != 0:
-            gastos.append({'cuenta': cuenta, 'saldo': saldo})
-            total_gastos += saldo
-
-    utilidad = total_ingresos - total_gastos
-
-    # Guardar el estado de resultados
-    if request.method == 'POST':
-        estado = EstadoResultados.objects.create(
-            fecha_inicio=fecha_inicio,
-            fecha_fin=fecha_fin,
-            total_ingresos=total_ingresos,
-            total_gastos=total_gastos,
-            utilidad_neta=utilidad,
-        )
-
-        for item in ingresos:
-            DetalleResultado.objects.create(
-                estado=estado,
-                cuenta=item['cuenta'],
-                monto=item['saldo'],
-            )
-        for item in gastos:
-            DetalleResultado.objects.create(
-                estado=estado,
-                cuenta=item['cuenta'],
-                monto=-item['saldo'],  # Negativo para gastos
-            )
-
-        return redirect('listar_resultados')  # Ajusta el nombre según tu ruta
-
-    return render(request, 'estados/estado_resultados.html', {
-        'ingresos': ingresos,
-        'gastos': gastos,
-        'total_ingresos': total_ingresos,
-        'total_gastos': total_gastos,
-        'utilidad': utilidad,
-        'fecha_inicio': fecha_inicio,
-        'fecha_fin': fecha_fin,
-        'anio': anio,
-        'tipo': tipo,
-        'mes': mes,
-        'tipos_periodo': tipos_periodo,  # Aquí pasamos la variable al template
-    })
-
-def listar_resultados(request):
-    resultados = EstadoResultados.objects.all().order_by('-fecha_generado')
-    return render(request, 'estados/listar_resultados.html', {'resultados': resultados})
-
-def ver_resultado(request, resultado_id):
-    resultado = get_object_or_404(EstadoResultados, pk=resultado_id)
-    detalles = resultado.detalles.all().select_related('cuenta').order_by('cuenta__codigo')
-
-    ingresos = []
-    gastos = []
-    for item in detalles:
-        if item.cuenta.tipo == 'ingreso':
-            ingresos.append(item)
-        else:
-            gastos.append(item)
-
-    return render(request, 'estados/ver_resultado.html', {
-        'resultado': resultado,
-        'ingresos': ingresos,
-        'gastos': gastos
-    })
-
-
-#Calcular el IVA
-
-def calcular_iva(request):
-    MES_NOMBRES = [
-        (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'),
-        (4, 'Abril'), (5, 'Mayo'), (6, 'Junio'),
-        (7, 'Julio'), (8, 'Agosto'), (9, 'Septiembre'),
-        (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre'),
-    ]
-
-    anio = int(request.GET.get('anio', date.today().year))
-    mes = int(request.GET.get('mes', date.today().month))
-
-    fecha_inicio = date(anio, mes, 1)
-    ultimo_dia = monthrange(anio, mes)[1]
-    fecha_fin = date(anio, mes, ultimo_dia)
-
-    detalles = DetalleAsiento.objects.filter(fecha__range=[fecha_inicio, fecha_fin])
-
-    # Cuentas de IVA (ajusta los prefijos si es necesario)
-    cuentas_credito = CuentaContable.objects.filter(codigo__startswith='1104')
-    cuentas_debito = CuentaContable.objects.filter(codigo__startswith='2106')
-
-    total_credito = 0
-    total_debito = 0
-
-    for cuenta in cuentas_credito:
-        saldo = detalles.filter(cuenta=cuenta).aggregate(
-            debe=Sum('debe') or 0,
-            haber=Sum('haber') or 0
-        )
-        total_credito += (saldo['debe'] or 0) - (saldo['haber'] or 0)
-
-    for cuenta in cuentas_debito:
-        saldo = detalles.filter(cuenta=cuenta).aggregate(
-            debe=Sum('debe') or 0,
-            haber=Sum('haber') or 0
-        )
-        total_debito += (saldo['haber'] or 0) - (saldo['debe'] or 0)
-
-    iva_pagar = total_debito - total_credito
-
-    if request.method == 'POST':
-        asiento = AsientoContable.objects.create(
-            fecha=fecha_fin,
-            descripcion=f"Cierre de IVA - {fecha_inicio.strftime('%B %Y')}"
-        )
-
-        for cuenta in cuentas_debito:
-            saldo = detalles.filter(cuenta=cuenta).aggregate(
-                debe=Sum('debe') or 0,
-                haber=Sum('haber') or 0
-            )
-            saldo_debito = (saldo['haber'] or 0) - (saldo['debe'] or 0)
-            if saldo_debito != 0:
-                DetalleAsiento.objects.create(
-                    asiento=asiento,
-                    fecha=fecha_fin,
-                    cuenta=cuenta,
-                    debe=saldo_debito,
-                    haber=0
-                )
-
-        for cuenta in cuentas_credito:
-            saldo = detalles.filter(cuenta=cuenta).aggregate(
-                debe=Sum('debe') or 0,
-                haber=Sum('haber') or 0
-            )
-            saldo_credito = (saldo['debe'] or 0) - (saldo['haber'] or 0)
-            if saldo_credito != 0:
-                DetalleAsiento.objects.create(
-                    asiento=asiento,
-                    fecha=fecha_fin,
-                    cuenta=cuenta,
-                    debe=0,
-                    haber=saldo_credito
-                )
-
-        cuenta_iva_pagar = CuentaContable.objects.get(codigo='2102.03')
-        if iva_pagar > 0:
-            DetalleAsiento.objects.create(
-                asiento=asiento,
-                fecha=fecha_fin,
-                cuenta=cuenta_iva_pagar,
-                debe=0,
-                haber=iva_pagar
-            )
-        elif iva_pagar < 0:
-            DetalleAsiento.objects.create(
-                asiento=asiento,
-                fecha=fecha_fin,
-                cuenta=cuenta_iva_pagar,
-                debe=abs(iva_pagar),
-                haber=0
-            )
-
-        return redirect('listar_asientos')
-
-    return render(request, 'contabilidad/calcular_iva.html', {
-        'anio': anio,
-        'mes': mes,
-        'fecha_inicio': fecha_inicio,
-        'fecha_fin': fecha_fin,
-        'total_debito': total_debito,
-        'total_credito': total_credito,
-        'iva_pagar': iva_pagar,
-        'meses': MES_NOMBRES,
-    })
-
-
-#view para ajustes contables
-def crear_ajuste(request):
-    cuentas = CuentaContable.objects.all().order_by('codigo')
-
-    if request.method == 'POST':
-        fecha = request.POST.get('fecha') or timezone.now().date()
-        descripcion = request.POST.get('descripcion', 'Ajuste Contable Manual')
-
-        asiento = AsientoContable.objects.create(
-            fecha=fecha,
-            descripcion=descripcion
-        )
-
-        for cuenta_id in request.POST.getlist('cuenta_id'):
-            debe = float(request.POST.get(f'debe_{cuenta_id}', 0) or 0)
-            haber = float(request.POST.get(f'haber_{cuenta_id}', 0) or 0)
-
-            if debe != 0 or haber != 0:
-                cuenta = CuentaContable.objects.get(id=cuenta_id)
-                DetalleAsiento.objects.create(
-                    asiento=asiento,
-                    fecha=fecha,
-                    cuenta=cuenta,
-                    debe=debe,
-                    haber=haber
-                )
-
-        return redirect('listar_asientos')  # Cambia por la ruta de tu listado de asientos
-
-    return render(request, 'contabilidad/crear_ajuste.html', {
-        'cuentas': cuentas
-    })
-
-
-
-#View para cierre contable
-def cierre_contable(request):
-    anio = int(request.GET.get('anio', date.today().year))
-    fecha_cierre = date(anio, 12, 31)
-
-    detalles = DetalleAsiento.objects.filter(fecha__year=anio)
-    cuentas_ingresos = CuentaContable.objects.filter(tipo='ingreso')
-    cuentas_gastos = CuentaContable.objects.filter(tipo__in=['gasto', 'costo'])
-
-    total_ingresos = 0
-    total_gastos = 0
-
-    for cuenta in cuentas_ingresos:
-        saldo = detalles.filter(cuenta=cuenta).aggregate(
-            debe=Sum('debe') or 0,
-            haber=Sum('haber') or 0
-        )
-        total_ingresos += (saldo['haber'] or 0) - (saldo['debe'] or 0)
-
-    for cuenta in cuentas_gastos:
-        saldo = detalles.filter(cuenta=cuenta).aggregate(
-            debe=Sum('debe') or 0,
-            haber=Sum('haber') or 0
-        )
-        total_gastos += (saldo['debe'] or 0) - (saldo['haber'] or 0)
-
-    resultado_ejercicio = total_ingresos - total_gastos
-
-    if request.method == 'POST':
-        asiento = AsientoContable.objects.create(
-            fecha=fecha_cierre,
-            descripcion=f"Cierre Contable del Ejercicio {anio}"
-        )
-
-        cuenta_pyg = CuentaContable.objects.get(codigo='6101.01')  # Pérdidas y Ganancias
-        cuenta_utilidad = CuentaContable.objects.get(codigo='310401')  # Utilidad del Ejercicio
-        cuenta_perdida = CuentaContable.objects.get(codigo='310402')  # Pérdida del Ejercicio
-
-        # Cerrar Ingresos → PYG
-        for cuenta in cuentas_ingresos:
-            saldo = detalles.filter(cuenta=cuenta).aggregate(
-                debe=Sum('debe') or 0,
-                haber=Sum('haber') or 0
-            )
-            saldo_ingreso = (saldo['haber'] or 0) - (saldo['debe'] or 0)
-            if saldo_ingreso != 0:
-                DetalleAsiento.objects.create(
-                    asiento=asiento,
-                    fecha=fecha_cierre,
-                    cuenta=cuenta,
-                    debe=saldo_ingreso,
-                    haber=0
-                )
-                DetalleAsiento.objects.create(
-                    asiento=asiento,
-                    fecha=fecha_cierre,
-                    cuenta=cuenta_pyg,
-                    debe=0,
-                    haber=saldo_ingreso
-                )
-
-        # Cerrar Gastos → PYG
-        for cuenta in cuentas_gastos:
-            saldo = detalles.filter(cuenta=cuenta).aggregate(
-                debe=Sum('debe') or 0,
-                haber=Sum('haber') or 0
-            )
-            saldo_gasto = (saldo['debe'] or 0) - (saldo['haber'] or 0)
-            if saldo_gasto != 0:
-                DetalleAsiento.objects.create(
-                    asiento=asiento,
-                    fecha=fecha_cierre,
-                    cuenta=cuenta_pyg,
-                    debe=saldo_gasto,
-                    haber=0
-                )
-                DetalleAsiento.objects.create(
-                    asiento=asiento,
-                    fecha=fecha_cierre,
-                    cuenta=cuenta,
-                    debe=0,
-                    haber=saldo_gasto
-                )
-
-        # Trasladar saldo de PYG a Utilidad/Pérdida
-        if resultado_ejercicio > 0:
-            DetalleAsiento.objects.create(
-                asiento=asiento,
-                fecha=fecha_cierre,
-                cuenta=cuenta_pyg,
-                debe=resultado_ejercicio,
-                haber=0
-            )
-            DetalleAsiento.objects.create(
-                asiento=asiento,
-                fecha=fecha_cierre,
-                cuenta=cuenta_utilidad,
-                debe=0,
-                haber=resultado_ejercicio
-            )
-        elif resultado_ejercicio < 0:
-            DetalleAsiento.objects.create(
-                asiento=asiento,
-                fecha=fecha_cierre,
-                cuenta=cuenta_perdida,
-                debe=abs(resultado_ejercicio),
-                haber=0
-            )
-            DetalleAsiento.objects.create(
-                asiento=asiento,
-                fecha=fecha_cierre,
-                cuenta=cuenta_pyg,
-                debe=0,
-                haber=abs(resultado_ejercicio)
-            )
-
-        messages.success(request, f"✅ Cierre Contable del Ejercicio {anio} realizado correctamente. Todas las cuentas de resultados han sido cerradas.")
-        return redirect('listar_asientos')
-
-    return render(request, 'contabilidad/cierre_contable.html', {
-        'anio': anio,
-        'total_ingresos': total_ingresos,
-        'total_gastos': total_gastos,
-        'utilidad': resultado_ejercicio,
-    })
 
 
 def login_view(request):
@@ -863,28 +481,27 @@ def calcular_existencias_peps(movimientos):
     for mov in movimientos:
         if mov.tipo_movimiento == 'entrada':
             lotes.append({
-                'cantidad': Decimal(mov.cantidad),
-                'costo_unitario': Decimal(mov.costo_unitario),
+                'cantidad': float(mov.cantidad),
+                'costo_unitario': float(mov.costo_unitario),
             })
         elif mov.tipo_movimiento in ['salida', 'proceso']:
-            cantidad_restante = Decimal(mov.cantidad)
+            cantidad_restante = float(mov.cantidad)
             while cantidad_restante > 0 and lotes:
                 lote = lotes[0]
                 if lote['cantidad'] > cantidad_restante:
                     lote['cantidad'] -= cantidad_restante
-                    cantidad_restante = Decimal('0')
+                    cantidad_restante = 0
                 else:
                     cantidad_restante -= lote['cantidad']
                     lotes.pop(0)
 
-        # Armado del detalle con decimales
+        # String tipo "4x250)+(2x200"
         detalle = "+".join(
-            f"({l['cantidad'].quantize(Decimal('0.00'))}*{l['costo_unitario'].quantize(Decimal('0.00'))})" 
-            for l in lotes if l['cantidad'] > 0
+            f"({int(l['cantidad'])}*{int(l['costo_unitario'])})" for l in lotes if l['cantidad'] > 0
         ) if lotes else "0"
 
-        unidades_totales = sum(l['cantidad'] for l in lotes).quantize(Decimal('0.00'))
-        valor_total = sum(l['cantidad'] * l['costo_unitario'] for l in lotes).quantize(Decimal('0.00'))
+        unidades_totales = sum(l['cantidad'] for l in lotes)
+        valor_total = sum(l['cantidad'] * l['costo_unitario'] for l in lotes)
 
         estado_por_movimiento.append({
             "detalle": detalle,
@@ -970,47 +587,62 @@ def kardex_producto_terminado(request, producto_id):
         'texto_boton': texto_boton,
     })
 
-
 def fabricar_embolsar_cafe(request):
     if request.method == 'POST':
         try:
             bolsas_a_fabricar = int(request.POST['cantidad_bolsas'])
             mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
             horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
-            precio_venta = Decimal(request.POST['precio_venta'])
         except (KeyError, ValueError, Decimal.InvalidOperation):
             messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
             return redirect('fabricar_embolsar_cafe')
 
-        if bolsas_a_fabricar <= 0 or precio_venta <= 0:
-            messages.error(request, "Los valores deben ser mayores a cero.")
+        # Validaciones básicas
+        if bolsas_a_fabricar <= 0:
+            messages.error(request, "La cantidad de bolsas debe ser mayor a cero.")
+            return redirect('fabricar_embolsar_cafe')
+        if mano_obra_por_hora < 0 or horas_trabajadas < 0:
+            messages.error(request, "El costo por hora y las horas trabajadas no pueden ser negativos.")
             return redirect('fabricar_embolsar_cafe')
 
+        # Calcular materia prima necesaria
         gramos_necesarios = Decimal(bolsas_a_fabricar) * Decimal('400')
         quintales_necesarios = (gramos_necesarios / Decimal('100000')).quantize(Decimal('0.0001'))
 
         materia_prima = get_object_or_404(MateriaPrima, nombre__iexact="Café en Quintales")
-        movimientos = KardexMateriaPrima.objects.filter(materia_prima=materia_prima).order_by('fecha', 'id')
+        movimientos = KardexMateriaPrima.objects.filter(
+            materia_prima=materia_prima
+        ).order_by('fecha', 'id')
 
         cantidad_restante = quintales_necesarios
         costo_total_mp = Decimal('0')
+        consumido_lotes = []
+
         for mov in movimientos:
             if mov.saldo_cantidad > 0 and cantidad_restante > 0:
                 a_consumir = min(mov.saldo_cantidad, cantidad_restante)
                 costo_total_mp += a_consumir * mov.costo_unitario
+                consumido_lotes.append({
+                    "lote_id": mov.id,
+                    "cantidad": a_consumir,
+                    "costo_unitario": mov.costo_unitario,
+                    "total": (a_consumir * mov.costo_unitario).quantize(Decimal('0.01')),
+                })
+                # Registrar salida en KardexMateriaPrima por lote consumido
                 nueva_saldo_cantidad = mov.saldo_cantidad - a_consumir
                 nueva_saldo_total = mov.saldo_total - (a_consumir * mov.costo_unitario)
                 KardexMateriaPrima.objects.create(
                     materia_prima=materia_prima,
                     fecha=timezone.now(),
                     tipo_movimiento='salida',
-                    concepto="Consumo para fabricación de bolsas",
+                    concepto=f"Consumo para fabricación de bolsas",
                     cantidad=a_consumir,
                     costo_unitario=mov.costo_unitario,
                     total=(a_consumir * mov.costo_unitario),
                     saldo_cantidad=nueva_saldo_cantidad,
                     saldo_total=nueva_saldo_total,
                 )
+                # Actualizar el saldo del movimiento original
                 mov.saldo_cantidad = nueva_saldo_cantidad
                 mov.saldo_total = nueva_saldo_total
                 mov.save()
@@ -1019,9 +651,10 @@ def fabricar_embolsar_cafe(request):
                 break
 
         if cantidad_restante > 0:
-            messages.error(request, "No hay suficiente café en inventario.")
+            messages.error(request, "No hay suficiente café en inventario para fabricar esa cantidad de bolsas.")
             return redirect('fabricar_embolsar_cafe')
 
+        # Cálculo de mano de obra y CIF
         costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
         cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
         costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
@@ -1039,7 +672,10 @@ def fabricar_embolsar_cafe(request):
             costo_total=costo_total
         )
 
-        ultimo_kardex = KardexProductoTerminado.objects.filter(producto=producto_final).order_by('-fecha', '-id').first()
+        # Kardex de producto terminado (entrada)
+        ultimo_kardex = KardexProductoTerminado.objects.filter(
+            producto=producto_final
+        ).order_by('-fecha', '-id').first()
         saldo_cantidad = (ultimo_kardex.saldo_cantidad if ultimo_kardex else Decimal('0')) + Decimal(bolsas_a_fabricar)
         saldo_total = (ultimo_kardex.saldo_total if ultimo_kardex else Decimal('0')) + costo_total
 
@@ -1056,22 +692,13 @@ def fabricar_embolsar_cafe(request):
         )
 
         messages.success(request, f"Fabricación registrada exitosamente. Costo total: ${costo_total:,.2f}")
-
-        # Generar asiento contable
-        costo_unitario = (costo_total / Decimal(bolsas_a_fabricar)).quantize(Decimal('0.01'))
-        crear_asiento_venta(
-            producto_final,
-            cantidad=bolsas_a_fabricar,
-            costo_unitario=costo_unitario,
-            precio_venta_unitario=precio_venta,
-            porcentaje_iva=Decimal('13')
-        )
-
         return render(request, 'fabricacion/fabricar_embolsar_cafe_exito.html', {
             'proceso': proceso,
+            'consumido_lotes': consumido_lotes,
         })
 
     return render(request, 'fabricacion/fabricar_embolsar_cafe.html')
+
 
 #view para fabricar licor
 def fabricar_mezcla_licor(request):
@@ -1234,140 +861,6 @@ def fabricar_embotellar_licor(request):
             botellas_a_fabricar = int(request.POST['cantidad_botellas'])
             mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
             horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
-            precio_venta = Decimal(request.POST['precio_venta'])
-        except (KeyError, ValueError, Decimal.InvalidOperation):
-            messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
-            return redirect('fabricar_embotellar_licor')
-
-        if botellas_a_fabricar <= 0 or precio_venta <= 0:
-            messages.error(request, "Los valores deben ser mayores a cero.")
-            return redirect('fabricar_embotellar_licor')
-
-        litros_mezcla_necesarios = Decimal(botellas_a_fabricar) * Decimal('0.75')
-        botellas_vacias_necesarias = Decimal(botellas_a_fabricar)
-
-        materia_prima_mezcla = get_object_or_404(ProductoTerminado, nombre__iexact="Mezcla de Licor de Café")
-        movimientos_mezcla = KardexProductoTerminado.objects.filter(producto=materia_prima_mezcla).order_by('fecha', 'id')
-
-        cantidad_restante_mezcla = litros_mezcla_necesarios
-        costo_total_mezcla = Decimal('0')
-        for mov in movimientos_mezcla:
-            if mov.saldo_cantidad > 0 and cantidad_restante_mezcla > 0:
-                a_consumir = min(mov.saldo_cantidad, cantidad_restante_mezcla)
-                costo_total_mezcla += a_consumir * mov.costo_unitario
-                nueva_saldo_cantidad = mov.saldo_cantidad - a_consumir
-                nueva_saldo_total = mov.saldo_total - (a_consumir * mov.costo_unitario)
-                KardexProductoTerminado.objects.create(
-                    producto=materia_prima_mezcla,
-                    fecha=timezone.now(),
-                    tipo_movimiento='salida',
-                    concepto="Consumo para embotellado de licor",
-                    cantidad=a_consumir,
-                    costo_unitario=mov.costo_unitario,
-                    total=(a_consumir * mov.costo_unitario),
-                    saldo_cantidad=nueva_saldo_cantidad,
-                    saldo_total=nueva_saldo_total,
-                )
-                mov.saldo_cantidad = nueva_saldo_cantidad
-                mov.saldo_total = nueva_saldo_total
-                mov.save()
-                cantidad_restante_mezcla -= a_consumir
-            if cantidad_restante_mezcla <= 0:
-                break
-
-        if cantidad_restante_mezcla > 0:
-            messages.error(request, "No hay suficiente mezcla de licor.")
-            return redirect('fabricar_embotellar_licor')
-
-        materia_prima_botella = get_object_or_404(MateriaPrima, nombre__iexact="Botellas de vidrio de 750ml")
-        movimientos_botella = KardexMateriaPrima.objects.filter(materia_prima=materia_prima_botella).order_by('fecha', 'id')
-
-        cantidad_restante_botella = botellas_vacias_necesarias
-        costo_total_botellas = Decimal('0')
-        for mov in movimientos_botella:
-            if mov.saldo_cantidad > 0 and cantidad_restante_botella > 0:
-                a_consumir = min(mov.saldo_cantidad, cantidad_restante_botella)
-                costo_total_botellas += a_consumir * mov.costo_unitario
-                nueva_saldo_cantidad = mov.saldo_cantidad - a_consumir
-                nueva_saldo_total = mov.saldo_total - (a_consumir * mov.costo_unitario)
-                KardexMateriaPrima.objects.create(
-                    materia_prima=materia_prima_botella,
-                    fecha=timezone.now(),
-                    tipo_movimiento='salida',
-                    concepto="Consumo para embotellado de licor",
-                    cantidad=a_consumir,
-                    costo_unitario=mov.costo_unitario,
-                    total=(a_consumir * mov.costo_unitario),
-                    saldo_cantidad=nueva_saldo_cantidad,
-                    saldo_total=nueva_saldo_total,
-                )
-                mov.saldo_cantidad = nueva_saldo_cantidad
-                mov.saldo_total = nueva_saldo_total
-                mov.save()
-                cantidad_restante_botella -= a_consumir
-            if cantidad_restante_botella <= 0:
-                break
-
-        if cantidad_restante_botella > 0:
-            messages.error(request, "No hay suficientes botellas vacías.")
-            return redirect('fabricar_embotellar_licor')
-
-        costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
-        costo_total_mp = costo_total_mezcla + costo_total_botellas
-        cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
-        costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
-
-        producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Licor de Café 750ml")
-        proceso = ProcesoFabricacion.objects.create(
-            tipo='embotellar_licor',
-            producto_final=producto_final,
-            cantidad_producida=botellas_a_fabricar,
-            gramos_usados=litros_mezcla_necesarios,
-            quintales_usados=botellas_vacias_necesarias,
-            costo_materia_prima=costo_total_mp,
-            costo_mano_obra=costo_mano_obra,
-            cif=cif,
-            costo_total=costo_total
-        )
-
-        ultimo_kardex = KardexProductoTerminado.objects.filter(producto=producto_final).order_by('-fecha', '-id').first()
-        saldo_cantidad = (ultimo_kardex.saldo_cantidad if ultimo_kardex else Decimal('0')) + Decimal(botellas_a_fabricar)
-        saldo_total = (ultimo_kardex.saldo_total if ultimo_kardex else Decimal('0')) + costo_total
-
-        KardexProductoTerminado.objects.create(
-            producto=producto_final,
-            fecha=timezone.now(),
-            tipo_movimiento='ingreso',
-            concepto=f"Embotellado por proceso {proceso.id}",
-            cantidad=Decimal(botellas_a_fabricar),
-            costo_unitario=(costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.01')),
-            total=costo_total,
-            saldo_cantidad=saldo_cantidad,
-            saldo_total=saldo_total,
-        )
-
-        messages.success(request, f"Embotellado registrado exitosamente. Costo total: ${costo_total:,.2f}")
-
-        # Generar asiento contable
-        costo_unitario = (costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.01'))
-        crear_asiento_venta(
-            producto_final,
-            cantidad=botellas_a_fabricar,
-            costo_unitario=costo_unitario,
-            precio_venta_unitario=precio_venta,
-            porcentaje_iva=Decimal('13')
-        )
-
-        return render(request, 'fabricacion/fabricar_embotellar_licor_exito.html', {
-            'proceso': proceso,
-        })
-
-    return render(request, 'fabricacion/fabricar_embotellar_licor.html')
-    if request.method == 'POST':
-        try:
-            botellas_a_fabricar = int(request.POST['cantidad_botellas'])
-            mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
-            horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
         except (KeyError, ValueError, Decimal.InvalidOperation):
             messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
             return redirect('fabricar_embotellar_licor')
@@ -1511,22 +1004,10 @@ def fabricar_embotellar_licor(request):
         )
 
         messages.success(request, f"Embotellado registrado exitosamente. Costo total: ${costo_total:,.2f}")
-        # Calcula el costo unitario
-        costo_unitario = (costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.01'))
-
-        # Supongamos precio de venta $4.00 por botella
-        crear_asiento_venta(
-            producto_final, 
-            cantidad=botellas_a_fabricar,
-            costo_unitario=costo_unitario,
-            precio_venta_unitario=Decimal('4.00'),  
-            porcentaje_iva=Decimal('13')
-        )
         return render(request, 'fabricacion/fabricar_embotellar_licor_exito.html', {
             'proceso': proceso,
             'consumido_lotes_mezcla': consumido_lotes_mezcla,
             'consumido_lotes_botella': consumido_lotes_botella,
         })
-    
 
     return render(request, 'fabricacion/fabricar_embotellar_licor.html')

@@ -1,0 +1,373 @@
+{% extends 'contabilidad/base.html' %}
+{% block content %}
+  <style>
+    body {
+      background: #f8f9fa !important;
+    }
+    .main-title {
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      font-weight: 700;
+      color: #27374d;
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      color: #7b7b7b;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+    .leyenda-color {
+      width: 1.2em;
+      height: 1.2em;
+      display: inline-block;
+      border-radius: 5px;
+      margin-right: 7px;
+      vertical-align: middle;
+      margin-bottom: 3px;
+    }
+    .ajuste-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 16px rgba(0, 0, 0, 0.09);
+      padding: 24px 28px;
+      margin-bottom: 32px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .ajuste-card h5 {
+      font-size: 1.2rem;
+      color: #27374d;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+    .ajuste-form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: end;
+    }
+    .ajuste-form-row .ajuste-form-group {
+      flex: 1 1 170px;
+      min-width: 170px;
+    }
+    .ajuste-form-row .ajuste-form-group input,
+    .ajuste-form-row .ajuste-form-group select {
+      font-size: 1.05rem;
+    }
+    .ajuste-form-row .ajuste-btn {
+      flex: 0 0 110px;
+    }
+    .ajuste-form-row label {
+      font-weight: 500;
+      color: #4e4e4e;
+    }
+    /* Tabla contable con scroll y sticky */
+    .table-wrap {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 3px 16px rgba(0, 0, 0, 0.09);
+      padding: 20px 12px 16px 12px;
+      max-width: 98vw;
+      margin: auto;
+      overflow-x: auto;
+    }
+    .contable-table {
+      min-width: 1200px;
+      width: 100%;
+      table-layout: fixed;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .contable-table th,
+    .contable-table td {
+      border-right: 1px solid #dae3eb !important;
+      border-bottom: 1.5px solid #dae3eb !important;
+      vertical-align: middle !important;
+      text-align: center;
+      background-clip: padding-box;
+      padding: 9px 5px 9px 5px !important;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .contable-table th.col-codigo,
+    .contable-table td.col-codigo {
+      min-width: 70px;
+      width: 70px;
+      text-align: center;
+      left: 0;
+      z-index: 1;
+      position: sticky;
+      background: #27374d !important;
+      color: #fff !important;
+    }
+    .contable-table th.col-cuenta,
+    .contable-table td.col-cuenta {
+      min-width: 220px;
+      width: 24%;
+      text-align: left;
+      left: 70px;
+      z-index: 1;
+      position: sticky;
+      background: #27374d !important;
+      color: #fff !important;
+    }
+    .contable-table thead th {
+    border-bottom: 2.5px solid #27374D !important;
+    }
+    .bloque-border {
+      border-left: 4px solid #b2becd !important;
+    }
+    .header-balance {
+      background: #e1e8ed !important;
+      color: #27374d !important;
+    }
+    .header-ajustes {
+      background: #f8edeb !important;
+      color: #944654 !important;
+    }
+    .header-ajustado {
+      background: #f6f8fc !important;
+      color: #3a3a3a !important;
+    }
+    .header-resultados {
+      background: #ebf5fb !important;
+      color: #18648d !important;
+    }
+    .header-capital {
+      background: #fcf3cf !important;
+      color: #a67e07 !important;
+    }
+    .header-bg {
+      background: #d4e6f1 !important;
+      color: #27374d !important;
+    }
+    .totales-row {
+      background: #d4e6f1 !important;
+      font-weight: bold;
+    }
+    .cell-zero {
+      color: #bcbcbc;
+    }
+    /* Sombra de bloque al pasar el mouse */
+    .hover-row:hover {
+      background: #f5fafd !important;
+    }
+    /* Cuentas mayores en negrita y color extra */
+    .mayor-cuenta {
+      font-weight: bold;
+      color: #27374d;
+    }
+    /* Responsive para móviles */
+    @media (max-width: 900px) {
+      .contable-table th.col-cuenta,
+      .contable-table td.col-cuenta {
+        min-width: 120px;
+      }
+    }
+  </style>
+
+  <div class="container my-5 position-relative">
+    <div class="text-center mb-2">
+      <h1 class="main-title">Hoja de Trabajo Contable</h1>
+      <p class="subtitle">Visualización moderna tipo Excel, separando Resultados, Capital y Balance General</p>
+    </div>
+    <!-- Leyenda colores -->
+    <div class="mb-4 text-center">
+      <span class="leyenda-color" style="background:#EBF5FB"></span> Estado de Resultados &nbsp;
+      <span class="leyenda-color" style="background:#FCF3CF"></span> Estado de Capital &nbsp;
+      <span class="leyenda-color" style="background:#D4E6F1"></span> Balance General
+    </div>
+
+    <!-- Formulario elegante para agregar ajuste manual -->
+    <div class="ajuste-card">
+      <h5>Agregar Ajuste Manual</h5>
+      <form method="post" class="ajuste-form-row">
+        {% csrf_token %}
+        <div class="ajuste-form-group">
+          <label>Cuenta</label>
+          <select name="cuenta" class="form-select" required>
+            <option value="">Seleccione cuenta...</option>
+            {% for cuenta in cuentas %}
+              <option value="{{ cuenta.id }}">{{ cuenta.codigo }} - {{ cuenta.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="ajuste-form-group">
+          <label>Debe</label>
+          <input type="number" name="debe" step="0.01" min="0" class="form-control" value="0" />
+        </div>
+        <div class="ajuste-form-group">
+          <label>Haber</label>
+          <input type="number" name="haber" step="0.01" min="0" class="form-control" value="0" />
+        </div>
+        <div class="ajuste-form-group">
+          <label>Descripción</label>
+          <input type="text" name="descripcion" class="form-control" value="ajuste manual" />
+        </div>
+        <div class="ajuste-btn">
+          <button type="submit" class="btn btn-success w-100" style="font-weight:600;">Agregar</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Botón exportar Excel -->
+    <button class="excel-btn" onclick="exportTableToExcel('tablaHojaTrabajo', 'HojaTrabajoContable')">Exportar a Excel</button>
+
+    <!-- Tabla hoja de trabajo en tarjeta -->
+    <div class="table-responsive table-wrap">
+      <table class="table table-bordered table-sm align-middle mb-0 contable-table" id="tablaHojaTrabajo">
+        <thead>
+          <tr>
+            <th rowspan="2" class="col-codigo">Código</th>
+            <th rowspan="2" class="col-cuenta">Cuenta</th>
+            <th colspan="2" class="header-balance bloque-border">Balance de Comprobación</th>
+            <th colspan="2" class="header-ajustes bloque-border">Ajustes</th>
+            <th colspan="2" class="header-ajustado bloque-border">Balance Ajustado</th>
+            <th colspan="2" class="header-resultados bloque-border">Estado de Resultados</th>
+            <th colspan="2" class="header-capital bloque-border">Estado de Capital</th>
+            <th colspan="2" class="header-bg bloque-border">Balance General</th>
+          </tr>
+          <tr>
+            <!-- Repite “Debe” y “Haber” por bloque -->
+            <th class="header-balance bloque-border">Debe</th>
+            <th class="header-balance">Haber</th>
+            <th class="header-ajustes bloque-border">Debe</th>
+            <th class="header-ajustes">Haber</th>
+            <th class="header-ajustado bloque-border">Debe</th>
+            <th class="header-ajustado">Haber</th>
+            <th class="header-resultados bloque-border">Debe</th>
+            <th class="header-resultados">Haber</th>
+            <th class="header-capital bloque-border">Debe</th>
+            <th class="header-capital">Haber</th>
+            <th class="header-bg bloque-border">Debe</th>
+            <th class="header-bg">Haber</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for x in datos %}
+            <tr class="hover-row">
+              <td class="col-codigo">{{ x.cuenta.codigo }}</td>
+              <td class="col-cuenta {% if x.cuenta.nivel <= 2 %}mayor-cuenta{% endif %}">{{ x.cuenta.nombre }}</td>
+              <!-- Balance de Comprobación -->
+              <td class="text-end header-balance bloque-border">
+                {% if x.debe %}
+                  {{ x.debe|floatformat:2 }}
+                {% else %}
+                  <span class="cell-zero">0,00</span>
+                {% endif %}
+              </td>
+              <td class="text-end header-balance">
+                {% if x.haber %}
+                  {{ x.haber|floatformat:2 }}
+                {% else %}
+                  <span class="cell-zero">0,00</span>
+                {% endif %}
+              </td>
+              <!-- Ajustes -->
+              <td class="text-end header-ajustes bloque-border">
+                {% if x.ajuste_debe %}
+                  {{ x.ajuste_debe|floatformat:2 }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td class="text-end header-ajustes">
+                {% if x.ajuste_haber %}
+                  {{ x.ajuste_haber|floatformat:2 }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <!-- Balance Ajustado -->
+              <td class="text-end header-ajustado bloque-border">
+                {% if x.ajustado_debe %}
+                  {{ x.ajustado_debe|floatformat:2 }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td class="text-end header-ajustado">
+                {% if x.ajustado_haber %}
+                  {{ x.ajustado_haber|floatformat:2 }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <!-- Estado de Resultados -->
+              {% if x.tipo in 'ingreso gasto costo' %}
+                <td class="text-end header-resultados bloque-border">
+                  {% if x.tipo == 'gasto' or x.tipo == 'costo' %}{{ x.ajustado_debe|floatformat:2 }}{% endif %}
+                </td>
+                <td class="text-end header-resultados">
+                  {% if x.tipo == 'ingreso' %}{{ x.ajustado_haber|floatformat:2 }}{% endif %}
+                </td>
+              {% else %}
+                <td class="header-resultados bloque-border"></td>
+                <td class="header-resultados"></td>
+              {% endif %}
+              <!-- Estado de Capital -->
+              {% if x.tipo == 'patrimonio' %}
+                <td class="text-end header-capital bloque-border">{{ x.ajustado_debe|floatformat:2 }}</td>
+                <td class="text-end header-capital">{{ x.ajustado_haber|floatformat:2 }}</td>
+              {% else %}
+                <td class="header-capital bloque-border"></td>
+                <td class="header-capital"></td>
+              {% endif %}
+              <!-- Balance General -->
+              {% if x.tipo in 'activo pasivo patrimonio' %}
+                <td class="text-end header-bg bloque-border">
+                  {% if x.tipo == 'activo' %}{{ x.ajustado_debe|floatformat:2 }}{% endif %}
+                </td>
+                <td class="text-end header-bg">
+                  {% if x.tipo == 'pasivo' or x.tipo == 'patrimonio' %}{{ x.ajustado_haber|floatformat:2 }}{% endif %}
+                </td>
+              {% else %}
+                <td class="header-bg bloque-border"></td>
+                <td class="header-bg"></td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="totales-row">
+            <td colspan="2" class="text-end">Totales:</td>
+            <td class="text-end header-balance bloque-border">{{ total_debe|floatformat:2 }}</td>
+            <td class="text-end header-balance">{{ total_haber|floatformat:2 }}</td>
+            <td class="text-end header-ajustes bloque-border">{{ total_ajuste_debe|floatformat:2 }}</td>
+            <td class="text-end header-ajustes">{{ total_ajuste_haber|floatformat:2 }}</td>
+            <td class="text-end header-ajustado bloque-border">{{ total_ajustado_debe|floatformat:2 }}</td>
+            <td class="text-end header-ajustado">{{ total_ajustado_haber|floatformat:2 }}</td>
+            <td class="header-resultados bloque-border" colspan="2"></td>
+            <td class="header-capital bloque-border" colspan="2"></td>
+            <td class="header-bg bloque-border" colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- JS Exportar a Excel puro -->
+  <script>
+    function exportTableToExcel(tableID, filename = '') {
+      let downloadLink
+      let dataType = 'application/vnd.ms-excel'
+      let tableSelect = document.getElementById(tableID)
+      let tableHTML = tableSelect.outerHTML.replace(/ /g, '%20')
+    
+      filename = filename ? filename + '.xls' : 'excel_data.xls'
+    
+      downloadLink = document.createElement('a')
+      document.body.appendChild(downloadLink)
+    
+      if (navigator.msSaveOrOpenBlob) {
+        let blob = new Blob(['\ufeff', tableHTML], { type: dataType })
+        navigator.msSaveOrOpenBlob(blob, filename)
+      } else {
+        downloadLink.href = 'data:' + dataType + ', ' + tableHTML
+        downloadLink.download = filename
+        downloadLink.click()
+      }
+    }
+  </script>
+{% endblock %}
