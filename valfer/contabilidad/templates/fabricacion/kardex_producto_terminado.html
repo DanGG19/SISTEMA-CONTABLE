@@ -14,24 +14,32 @@
         <th class="border px-2 py-1">Entradas<br>Unidades</th>
         <th class="border px-2 py-1">Costo Unitario</th>
         <th class="border px-2 py-1">Total</th>
+        <th class="border px-2 py-1">Precio de Venta</th>
         <th class="border px-2 py-1">Salidas<br>Unidades</th>
         <th class="border px-2 py-1">Costo Unitario</th>
         <th class="border px-2 py-1">Total</th>
         <th class="border px-2 py-1">Existencias<br>Unidades</th>
-        <th class="border px-2 py-1">Costo Unitario</th>
-        <th class="border px-2 py-1">Total</th>
+        <th class="border px-2 py-1">Detalle Existencias</th>
+        <th class="border px-2 py-1">Total Existencias</th>
       </tr>
     </thead>
     <tbody>
       {% for mov, exist in movimientos_y_lotes %}
         <tr>
           <td class="border px-2 py-1">{{ forloop.counter }}</td>
-          <td class="border px-2 py-1">{{ mov.fecha }}</td>
+          <td class="border px-2 py-1">{{ mov.fecha|date:"d/m/Y" }}</td>
           <td class="border px-2 py-1">{{ mov.concepto }}</td>
           {% if mov.tipo_movimiento == 'ingreso' %}
             <td class="border px-2 py-1">{{ mov.cantidad|floatformat:2 }}</td>
-            <td class="border px-2 py-1">{{ mov.costo_unitario|floatformat:2 }}</td>
-            <td class="border px-2 py-1">{{ mov.total|floatformat:2 }}</td>
+            <td class="border px-2 py-1">${{ mov.costo_unitario|floatformat:2 }}</td>
+            <td class="border px-2 py-1">${{ mov.total|floatformat:2 }}</td>
+            <td class="border px-2 py-1">
+              {% if mov.precio_venta_unitario %}
+                <span class="font-bold text-blue-700">${{ mov.precio_venta_unitario|floatformat:2 }}</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
@@ -39,10 +47,12 @@
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
+            <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1">{{ mov.cantidad|floatformat:2 }}</td>
-            <td class="border px-2 py-1">{{ mov.costo_unitario|floatformat:2 }}</td>
-            <td class="border px-2 py-1">{{ mov.total|floatformat:2 }}</td>
+            <td class="border px-2 py-1">${{ mov.costo_unitario|floatformat:2 }}</td>
+            <td class="border px-2 py-1">${{ mov.total|floatformat:2 }}</td>
           {% else %}
+            <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
@@ -53,7 +63,7 @@
           <!-- Existencias -->
           <td class="border px-2 py-1">{{ exist.unidades_totales|floatformat:2 }}</td>
           <td class="border px-2 py-1">{{ exist.detalle }}</td>
-          <td class="border px-2 py-1">{{ exist.valor_total|floatformat:2 }}</td>
+          <td class="border px-2 py-1">${{ exist.valor_total|floatformat:2 }}</td>
         </tr>
       {% endfor %}
     </tbody>
@@ -61,7 +71,7 @@
 </div>
 
 {% if fabricar_url and texto_boton %}
-  <a href="{% url fabricar_url %}" class="inline-block bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">
+  <a href="{% url fabricar_url %}" class="inline-block bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition mt-4">
     {{ texto_boton }}
   </a>
 {% endif %}

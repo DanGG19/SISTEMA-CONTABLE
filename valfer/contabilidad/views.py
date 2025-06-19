@@ -806,7 +806,7 @@ def fabricar_mezcla_licor(request):
         # 3. Costos
         costo_mp = costo_total_cafe + costo_total_licor + costo_total_agua
         costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
-        cif = ((costo_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
+        cif = ((costo_mp + costo_mano_obra) * Decimal('0.80')).quantize(Decimal('0.01'))
         costo_total = (costo_mp + costo_mano_obra + cif).quantize(Decimal('0.02'))
 
         producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Mezcla de Licor de Café")
@@ -967,8 +967,23 @@ def fabricar_embotellar_licor(request):
         # --- MANO DE OBRA Y CIF ---
         costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
         costo_total_mp = costo_total_mezcla + costo_total_botellas
-        cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
+
+        cif_mezcla = Decimal('0.80')  # 80% para mezcla
+        cif_emb = Decimal('0.45')     # 45% para embotellado
+
+        # Cálculo de CIF y costo total
+        cif = ((costo_total_mp + costo_mano_obra) * cif_emb).quantize(Decimal('0.01'))
         costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
+
+        # --- CALCULAR EL PRECIO DE VENTA UNITARIO ---
+        # Recupera el costo total de mezcla usado para esta tanda de embotellado:
+        costo_mezcla_consumida = costo_total_mezcla
+        costo_embotellado = costo_total - costo_total_mezcla
+
+        suma_costos = costo_mezcla_consumida + costo_embotellado
+        margen = Decimal('0.50')  # 50% margen (puedes ajustar aquí)
+        precio_venta_unitario = (suma_costos / Decimal(botellas_a_fabricar)) * (1 + margen)
+        precio_venta_unitario = precio_venta_unitario.quantize(Decimal('0.02'))
 
         # --- REGISTRO DE PROCESO ---
         producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Licor de Café 750ml")
@@ -997,10 +1012,11 @@ def fabricar_embotellar_licor(request):
             tipo_movimiento='ingreso',
             concepto=f"Embotellado por proceso {proceso.id}",
             cantidad=Decimal(botellas_a_fabricar),
-            costo_unitario=(costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.01')),
+            costo_unitario=(costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.02')),
             total=costo_total,
             saldo_cantidad=saldo_cantidad,
             saldo_total=saldo_total,
+            precio_venta_unitario=precio_venta_unitario,   # <-- aquí se almacena el precio de venta unitario
         )
 
         messages.success(request, f"Embotellado registrado exitosamente. Costo total: ${costo_total:,.2f}")
@@ -1008,6 +1024,9 @@ def fabricar_embotellar_licor(request):
             'proceso': proceso,
             'consumido_lotes_mezcla': consumido_lotes_mezcla,
             'consumido_lotes_botella': consumido_lotes_botella,
+            'costo_mezcla': costo_mezcla_consumida,
+            'costo_embotellado': costo_embotellado,
+            'precio_venta_unitario': precio_venta_unitario,
         })
 
     return render(request, 'fabricacion/fabricar_embotellar_licor.html')

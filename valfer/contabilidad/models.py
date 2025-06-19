@@ -117,6 +117,7 @@ class KardexProductoTerminado(models.Model):
     concepto = models.CharField(max_length=255, blank=True, null=True)
     cantidad = models.DecimalField(max_digits=12, decimal_places=2)
     costo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    precio_venta_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     total = models.DecimalField(max_digits=12, decimal_places=2)
     saldo_cantidad = models.DecimalField(max_digits=12, decimal_places=2)
     saldo_total = models.DecimalField(max_digits=12, decimal_places=2)
