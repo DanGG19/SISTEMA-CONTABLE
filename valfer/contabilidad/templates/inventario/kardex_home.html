@@ -38,13 +38,13 @@
 
 </div>
 
-<!-- NUEVA SECCIÓN -->
+<!-- Producto terminado-->
 <h2 class="text-3xl font-extrabold text-amber-800 mb-10 mt-20">Kardex de Productos Terminados</h2>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
     <!-- Embolsar Café -->
-    <a href="{% url 'fabricar_embolsar_cafe' %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+    <a href="{% url 'kardex_producto_terminado' 1 %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
         <div class="flex flex-col items-center justify-center">
             <div class="text-6xl mb-4 text-green-700"> 
                 <img src="{% static 'img/coffebag.png' %}" alt="" width="64" height="64">
@@ -55,7 +55,7 @@
     </a>
 
     <!-- Mezclar Licor -->
-    <a href="{% url 'fabricar_mezcla_licor' %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+    <a href="{% url 'kardex_producto_terminado' 2 %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
         <div class="flex flex-col items-center justify-center">
             <div class="text-6xl mb-4 text-green-700">
                 <img src="{% static 'img/blender.png' %}" alt="" width="64" height="64">
@@ -66,7 +66,7 @@
     </a>
 
     <!-- Embotellar Licor -->
-    <a href="{% url 'fabricar_embotellar_licor' %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+    <a href="{% url 'kardex_producto_terminado' 3 %}" class="bg-white shadow-lg p-8 rounded-2xl border border-green-300 hover:shadow-2xl hover:scale-105 transition-all duration-300">
         <div class="flex flex-col items-center justify-center">
             <div class="text-6xl mb-4 text-green-700">
                 <img src="{% static 'img/licorcafe.png' %}" alt="" width="64" height="64">
