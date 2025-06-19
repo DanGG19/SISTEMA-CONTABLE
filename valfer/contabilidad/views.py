@@ -14,6 +14,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from .utils import crear_asiento_venta
+
 
 def home(request):
     return render(request, 'contabilidad/home.html')
@@ -25,10 +27,6 @@ def catalogo_cuentas(request):
         cuenta.padding = (cuenta.nivel - 1) * 20
 
     return render(request, 'contabilidad/catalogo.html', {'cuentas': cuentas})
-
-
-from django.http import JsonResponse
-from .models import AsientoContable
 
 def contar_asientos_por_fecha(request, fecha):
     try:
@@ -411,7 +409,6 @@ def logout_view(request):
 
 # VISTAS KARDEX METODO PEPS
 
-
 def kardex_home(request):
     return render(request, 'inventario/kardex_home.html')
 
@@ -495,7 +492,7 @@ def calcular_existencias_peps(movimientos):
                     cantidad_restante -= lote['cantidad']
                     lotes.pop(0)
 
-        # String tipo "4x250)+(2x200"
+        # String tipo "(4x250)+(2x200)"
         detalle = "+".join(
             f"({int(l['cantidad'])}*{int(l['costo_unitario'])})" for l in lotes if l['cantidad'] > 0
         ) if lotes else "0"
@@ -593,7 +590,7 @@ def fabricar_embolsar_cafe(request):
             bolsas_a_fabricar = int(request.POST['cantidad_bolsas'])
             mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
             horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
-        except (KeyError, ValueError, Decimal.InvalidOperation):
+        except (KeyError, ValueError, InvalidOperation):
             messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
             return redirect('fabricar_embolsar_cafe')
 
@@ -692,6 +689,14 @@ def fabricar_embolsar_cafe(request):
         )
 
         messages.success(request, f"Fabricación registrada exitosamente. Costo total: ${costo_total:,.2f}")
+    
+        crear_asiento_venta(
+            producto_final, 
+            cantidad=bolsas_a_fabricar,
+            costo_unitario=(costo_total / Decimal(bolsas_a_fabricar)).quantize(Decimal('0.01')),
+            precio_venta_unitario=Decimal('3.50'),
+            porcentaje_iva=Decimal('13')
+        )
         return render(request, 'fabricacion/fabricar_embolsar_cafe_exito.html', {
             'proceso': proceso,
             'consumido_lotes': consumido_lotes,
@@ -707,7 +712,7 @@ def fabricar_mezcla_licor(request):
             litros_a_fabricar = Decimal(request.POST['cantidad_litros'])
             mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
             horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
-        except (KeyError, ValueError, Decimal.InvalidOperation):
+        except (KeyError, ValueError, InvalidOperation):
             messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
             return redirect('fabricar_mezcla_licor')
 
@@ -861,7 +866,7 @@ def fabricar_embotellar_licor(request):
             botellas_a_fabricar = int(request.POST['cantidad_botellas'])
             mano_obra_por_hora = Decimal(request.POST['mano_obra_por_hora'])
             horas_trabajadas = Decimal(request.POST['horas_trabajadas'])
-        except (KeyError, ValueError, Decimal.InvalidOperation):
+        except (KeyError, ValueError, InvalidOperation):
             messages.error(request, "Por favor ingresa valores válidos en todos los campos.")
             return redirect('fabricar_embotellar_licor')
 
@@ -1012,7 +1017,7 @@ def fabricar_embotellar_licor(request):
             tipo_movimiento='ingreso',
             concepto=f"Embotellado por proceso {proceso.id}",
             cantidad=Decimal(botellas_a_fabricar),
-            costo_unitario=(costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.02')),
+            costo_unitario=(costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.01')),
             total=costo_total,
             saldo_cantidad=saldo_cantidad,
             saldo_total=saldo_total,
@@ -1020,6 +1025,13 @@ def fabricar_embotellar_licor(request):
         )
 
         messages.success(request, f"Embotellado registrado exitosamente. Costo total: ${costo_total:,.2f}")
+        crear_asiento_venta(
+            producto_final,
+            cantidad=botellas_a_fabricar,
+            costo_unitario=(costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.01')),
+            precio_venta_unitario=precio_venta_unitario,
+            porcentaje_iva=Decimal('13')
+        )
         return render(request, 'fabricacion/fabricar_embotellar_licor_exito.html', {
             'proceso': proceso,
             'consumido_lotes_mezcla': consumido_lotes_mezcla,

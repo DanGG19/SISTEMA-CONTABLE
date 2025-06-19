@@ -2,6 +2,7 @@ from django.db.models.signals import post_save, post_migrate
 from django.dispatch import receiver
 from .models import *
 import logging
+from django.core.management import call_command
 
 logger = logging.getLogger(__name__)
 
@@ -134,3 +135,16 @@ def crear_productos_terminados_iniciales(sender, **kwargs):
                 logger.info(f"Producto Terminado creado: {producto.nombre}")
             else:
                 logger.info(f"Producto Terminado ya existe: {producto.nombre}")
+
+# Signal para cargar el fixture después de migraciones
+@receiver(post_migrate)
+def cargar_fixture_catalogo(sender, **kwargs):
+    """
+    Carga los datos iniciales desde catalogo_valfer.json
+    """
+    if sender.name == 'contabilidad':
+        try:
+            call_command('loaddata', 'catalogo_valfer.json')
+            logger.info("Fixture catalogo_valfer.json cargado exitosamente")
+        except Exception as e:
+            logger.error(f"Error al cargar el fixture: {str(e)}")
