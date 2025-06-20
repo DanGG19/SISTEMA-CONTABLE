@@ -65,142 +65,172 @@ Registrar Asiento Contable
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const addRowBtn = document.getElementById('add-row')
-    const tableBody = document.getElementById('detalle-body')
-    const totalDebe = document.getElementById('total-debe')
-    const totalHaber = document.getElementById('total-haber')
-    const descripcionInput = document.getElementById('id_descripcion')
-    const fechaInput = document.getElementById('id_fecha')
+    const addRowBtn = document.getElementById('add-row');
+    const tableBody = document.getElementById('detalle-body');
+    const totalDebe = document.getElementById('total-debe');
+    const totalHaber = document.getElementById('total-haber');
+    const descripcionInput = document.getElementById('id_descripcion');
+    const fechaInput = document.getElementById('id_fecha');
 
     function updateTotals() {
-      let debeTotal = 0
-      let haberTotal = 0
+      let debeTotal = 0;
+      let haberTotal = 0;
       document.querySelectorAll('[name$="-debe"]').forEach((input) => {
-        debeTotal += parseFloat(input.value) || 0
-      })
+        debeTotal += parseFloat(input.value) || 0;
+      });
       document.querySelectorAll('[name$="-haber"]').forEach((input) => {
-        haberTotal += parseFloat(input.value) || 0
-      })
-      totalDebe.textContent = debeTotal.toFixed(2)
-      totalHaber.textContent = haberTotal.toFixed(2)
+        haberTotal += parseFloat(input.value) || 0;
+      });
+      totalDebe.textContent = debeTotal.toFixed(2);
+      totalHaber.textContent = haberTotal.toFixed(2);
     }
 
     function configurarIntercambioDebeHaber(row) {
-      const debeInput = row.querySelector('[name$="-debe"]')
-      const haberInput = row.querySelector('[name$="-haber"]')
+      const debeInput = row.querySelector('[name$="-debe"]');
+      const haberInput = row.querySelector('[name$="-haber"]');
 
-      if (!debeInput || !haberInput) return
+      if (!debeInput || !haberInput) return;
 
       function toggleInputs() {
         if (parseFloat(debeInput.value) > 0) {
-          haberInput.readOnly = true
+          haberInput.readOnly = true;
         } else {
-          haberInput.readOnly = false
+          haberInput.readOnly = false;
         }
-
         if (parseFloat(haberInput.value) > 0) {
-          debeInput.readOnly = true
+          debeInput.readOnly = true;
         } else {
-          debeInput.readOnly = false  
+          debeInput.readOnly = false;
         }
       }
 
       debeInput.addEventListener('input', () => {
-        toggleInputs()
-        updateTotals()
-      })
+        toggleInputs();
+        updateTotals();
+      });
       haberInput.addEventListener('input', () => {
-        toggleInputs()
-        updateTotals()
-      })
+        toggleInputs();
+        updateTotals();
+      });
 
       // Ejecutar al cargar
-      toggleInputs()
+      toggleInputs();
     }
 
     function obtenerFechaActual() {
-      const hoy = new Date()
-      const yyyy = hoy.getFullYear()
-      const mm = String(hoy.getMonth() + 1).padStart(2, '0')
-      const dd = String(hoy.getDate()).padStart(2, '0')
-      return `${yyyy}-${mm}-${dd}`
+      const hoy = new Date();
+      const yyyy = hoy.getFullYear();
+      const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+      const dd = String(hoy.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
     }
 
     function descripcionDinamica() {
-      const hoy = new Date()
-      const fechaTexto = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      const hoy = new Date();
+      const fechaTexto = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       return fetch(`/asientos/count/${obtenerFechaActual()}`)
         .then((res) => res.json())
-        .then((data) => `${fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1)} - Asiento Contable ${data.count + 1}`)
+        .then((data) => `${fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1)} - Asiento Contable ${data.count + 1}`);
     }
 
     descripcionDinamica().then((desc) => {
-      descripcionInput.value = desc
-      fechaInput.value = obtenerFechaActual()
-      document.getElementById('descripcion_display').textContent = desc
-    })
+      descripcionInput.value = desc;
+      fechaInput.value = obtenerFechaActual();
+      document.getElementById('descripcion_display').textContent = desc;
+    });
 
-    document.querySelectorAll('.detalle-row').forEach(configurarIntercambioDebeHaber)
+    // Inicializar Select2 en los selects existentes
+    function inicializarSelect2() {
+      $('.select-cuenta').each(function () {
+        // Destruye select2 si ya está inicializado para evitar duplicados
+        if ($(this).hasClass('select2-hidden-accessible')) {
+          $(this).select2('destroy');
+        }
+        $(this).select2({
+          width: '100%',
+          placeholder: 'Buscar cuenta contable',
+        });
+      });
+    }
+
+    // Inicializa los existentes al cargar
+    inicializarSelect2();
+
+    // Configurar debe/haber en filas existentes
+    document.querySelectorAll('.detalle-row').forEach(configurarIntercambioDebeHaber);
 
     addRowBtn.addEventListener('click', function () {
-      const totalForms = document.querySelector('#id_detalleasiento_set-TOTAL_FORMS')
-      const formIdx = parseInt(totalForms.value)
-      const template = document.querySelector('.detalle-row')
-      const clone = template.cloneNode(true)
-
-      clone.querySelectorAll('input, select, textarea').forEach((el) => {
-        const name = el.name.replace(/-\d+-/, `-${formIdx}-`)
-        const id = `id_${name}`
-        el.name = name
-        el.id = id
-        if (el.name.endsWith('-debe') || el.name.endsWith('-haber')) {
-          el.value = '0.00'
-          el.setAttribute('step', '0.01')
-        } else {
-          el.value = ''
+      // Destruye select2 en TODOS antes de clonar, para que el DOM esté limpio
+      $('.select-cuenta').each(function () {
+        if ($(this).hasClass('select2-hidden-accessible')) {
+          $(this).select2('destroy');
         }
-      })
+      });
 
-      totalForms.value = formIdx + 1
-      tableBody.appendChild(clone)
-      configurarIntercambioDebeHaber(clone)
-      updateTotals()
-    })
+      const totalForms = document.querySelector('#id_detalleasiento_set-TOTAL_FORMS');
+      const formIdx = parseInt(totalForms.value);
+      const template = document.querySelector('.detalle-row');
+      const clone = template.cloneNode(true);
+
+      // Actualiza atributos y limpia valores
+      clone.querySelectorAll('input, select, textarea').forEach((el) => {
+        if (!el.name) return; // Evita errores en celdas sin campos
+        const name = el.name.replace(/-\d+-/, `-${formIdx}-`);
+        const id = `id_${name}`;
+        el.name = name;
+        el.id = id;
+        if (el.name.endsWith('-debe') || el.name.endsWith('-haber')) {
+          el.value = '0.00';
+          el.setAttribute('step', '0.01');
+        } else {
+          el.value = '';
+        }
+      });
+
+      totalForms.value = formIdx + 1;
+      tableBody.appendChild(clone);
+
+      // Vuelve a inicializar select2 para TODOS los selects (nuevos y existentes)
+      inicializarSelect2();
+
+      configurarIntercambioDebeHaber(clone);
+      updateTotals();
+    });
 
     function validarFormulario() {
-      let valido = true
-      let totalDebe = 0
-      let totalHaber = 0
-      let errorMsg = ''
+      let valido = true;
+      let totalDebe = 0;
+      let totalHaber = 0;
+      let errorMsg = '';
 
       document.querySelectorAll('#detalle-body tr').forEach((row) => {
-        const cuenta = row.querySelector('select')
-        const fecha = row.querySelector('[name$="-fecha"]')
-        const debe = parseFloat(row.querySelector('[name$="-debe"]').value) || 0
-        const haber = parseFloat(row.querySelector('[name$="-haber"]').value) || 0
+        const cuenta = row.querySelector('select');
+        const fecha = row.querySelector('[name$="-fecha"]');
+        const debe = parseFloat(row.querySelector('[name$="-debe"]').value) || 0;
+        const haber = parseFloat(row.querySelector('[name$="-haber"]').value) || 0;
 
         if (!fecha || !fecha.value) {
-          valido = false
-          errorMsg = '❌ Cada detalle debe tener una fecha asignada.'
+          valido = false;
+          errorMsg = '❌ Cada detalle debe tener una fecha asignada.';
         }
 
         if (!cuenta || cuenta.value === '') {
-          valido = false
-          errorMsg = '❌ Cada detalle debe tener una cuenta asignada.'
+          valido = false;
+          errorMsg = '❌ Cada detalle debe tener una cuenta asignada.';
         }
 
         if (debe === 0 && haber === 0) {
-          valido = false
-          errorMsg = '❌ Cada detalle debe tener un valor en debe o haber.'
+          valido = false;
+          errorMsg = '❌ Cada detalle debe tener un valor en debe o haber.';
         }
 
-        totalDebe += debe
-        totalHaber += haber
-      })
+        totalDebe += debe;
+        totalHaber += haber;
+      });
 
       if (totalDebe.toFixed(2) !== totalHaber.toFixed(2)) {
-        valido = false
-        errorMsg = '❌ El total del debe y el haber deben coincidir.'
+        valido = false;
+        errorMsg = '❌ El total del debe y el haber deben coincidir.';
       }
 
       if (!valido) {
@@ -209,20 +239,20 @@ Registrar Asiento Contable
           title: 'Error de Validación',
           text: errorMsg,
           confirmButtonText: 'Aceptar'
-        })
-        return false
+        });
+        return false;
       }
 
-      return true
+      return true;
     }
 
     document.getElementById('asiento-form').addEventListener('submit', function (e) {
-      e.preventDefault()
+      e.preventDefault();
 
-      if (!validarFormulario()) return
+      if (!validarFormulario()) return;
 
-      const form = e.target
-      const formData = new FormData(form)
+      const form = e.target;
+      const formData = new FormData(form);
 
       fetch('', {
         method: 'POST',
@@ -240,23 +270,23 @@ Registrar Asiento Contable
               text: 'El asiento contable ha sido registrado correctamente.',
               confirmButtonText: 'Aceptar'
             }).then(() => {
-              window.location.href = '/asientos/nuevo/'
-            })
+              window.location.href = '/asientos/nuevo/';
+            });
           }
         })
         .catch((error) => {
-          console.error('Error al guardar:', error)
+          console.error('Error al guardar:', error);
           Swal.fire({
             icon: 'error',
             title: 'Ocurrió un error',
             text: 'No se pudo guardar el asiento.',
             confirmButtonText: 'Aceptar'
-          })
-        })
-    })
+          });
+        });
+    });
 
-    updateTotals()
-  })
+    updateTotals();
+  });
 </script>
 
 <!-- Select2 CDN -->
