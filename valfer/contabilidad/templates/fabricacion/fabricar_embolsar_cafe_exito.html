@@ -10,6 +10,9 @@
   <li>Costo Mano de Obra: $<b>{{ proceso.costo_mano_obra|floatformat:2 }}</b></li>
   <li>CIF (30%): $<b>{{ proceso.cif|floatformat:2 }}</b></li>
   <li><b>Costo total lote: ${{ proceso.costo_total|floatformat:2 }}</b></li>
+  <li><b>Precio de venta unitario:</b>
+      <span class="font-bold text-blue-700">${{ precio_venta_unitario|floatformat:2 }}</span>
+  </li>
 </ul>
 <h3 class="font-bold">Detalle de lotes de café utilizados (PEPS):</h3>
 <table class="w-full border text-center my-2">

@@ -521,36 +521,42 @@ def kardex_producto_terminado(request, producto_id):
     movimientos = KardexProductoTerminado.objects.filter(
         producto=producto
     ).order_by('fecha', 'id')
-    
+
     movimientos_y_lotes = []
     lotes_actuales = []
     total_existencias = Decimal('0')
-    total_valor = Decimal('0')
-    
+
     for mov in movimientos:
         if mov.tipo_movimiento == 'ingreso':
-            lotes_actuales.append({'cantidad': mov.cantidad, 'costo_unitario': mov.costo_unitario})
+            lotes_actuales.append({
+                'cantidad': mov.cantidad,
+                'costo_unitario': mov.costo_unitario,
+                'precio_venta_unitario': mov.precio_venta_unitario or mov.costo_unitario  # Fallback por si no está definido
+            })
             total_existencias += mov.cantidad
-            total_valor += mov.cantidad * mov.costo_unitario
+
         elif mov.tipo_movimiento == 'salida':
             cantidad_a_sacar = mov.cantidad
-            valor_salida = Decimal('0')
-            detalle_lotes = []
             i = 0
             while cantidad_a_sacar > 0 and i < len(lotes_actuales):
                 lote = lotes_actuales[i]
                 consumir = min(lote['cantidad'], cantidad_a_sacar)
-                valor_salida += consumir * lote['costo_unitario']
-                detalle_lotes.append(f"{consumir}x{lote['costo_unitario']}")
                 lote['cantidad'] -= consumir
                 cantidad_a_sacar -= consumir
                 if lote['cantidad'] == 0:
                     i += 1
             lotes_actuales = [l for l in lotes_actuales if l['cantidad'] > 0]
             total_existencias -= mov.cantidad
-            total_valor -= valor_salida
+
+        # Usar el precio de venta unitario para calcular el total de existencias (valor potencial de venta)
+        total_valor = sum(
+            l['cantidad'] * l.get('precio_venta_unitario', l['costo_unitario'])
+            for l in lotes_actuales
+        )
+        # Detalle muestra el cálculo con precio de venta unitario
         detalle_existencias = " + ".join(
-            [f"({l['cantidad']}*{l['costo_unitario']})" for l in lotes_actuales]
+            [f"({float(l['cantidad']):.2f}*{float(l.get('precio_venta_unitario', l['costo_unitario'])):.2f})"
+             for l in lotes_actuales]
         ) if lotes_actuales else ""
         movimientos_y_lotes.append((
             mov,
@@ -562,7 +568,6 @@ def kardex_producto_terminado(request, producto_id):
         ))
 
     # -------- Lógica para el botón de fabricación --------
-    # Puedes cambiar los nombres exactos según tu base de datos y signals
     nombre = producto.nombre.lower()
     if "bolsa" in nombre:
         fabricar_url = 'fabricar_embolsar_cafe'
@@ -656,6 +661,10 @@ def fabricar_embolsar_cafe(request):
         cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
         costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
 
+        # Precio de venta automático
+        precio_venta_unitario = (costo_total / Decimal(bolsas_a_fabricar)) * Decimal('1.5')
+        precio_venta_unitario = precio_venta_unitario.quantize(Decimal('0.01'))
+
         producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Bolsa Café 400g")
         proceso = ProcesoFabricacion.objects.create(
             tipo='embolsar_cafe',
@@ -686,20 +695,22 @@ def fabricar_embolsar_cafe(request):
             total=costo_total,
             saldo_cantidad=saldo_cantidad,
             saldo_total=saldo_total,
+            precio_venta_unitario=precio_venta_unitario,
         )
 
         messages.success(request, f"Fabricación registrada exitosamente. Costo total: ${costo_total:,.2f}")
     
         crear_asiento_venta(
-            producto_final, 
+            producto=producto_final,
             cantidad=bolsas_a_fabricar,
             costo_unitario=(costo_total / Decimal(bolsas_a_fabricar)).quantize(Decimal('0.01')),
-            precio_venta_unitario=Decimal('3.50'),
+            precio_venta_unitario=precio_venta_unitario,
             porcentaje_iva=Decimal('13')
         )
         return render(request, 'fabricacion/fabricar_embolsar_cafe_exito.html', {
             'proceso': proceso,
             'consumido_lotes': consumido_lotes,
+            'precio_venta_unitario': precio_venta_unitario,
         })
 
     return render(request, 'fabricacion/fabricar_embolsar_cafe.html')
@@ -1009,7 +1020,6 @@ def fabricar_embotellar_licor(request):
         costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
         costo_total_mp = costo_total_mezcla + costo_total_botellas
 
-        cif_mezcla = Decimal('0.80')  # 80% para mezcla
         cif_emb = Decimal('0.45')     # 45% para embotellado
 
         # Cálculo de CIF y costo total
@@ -1018,13 +1028,12 @@ def fabricar_embotellar_licor(request):
 
         # --- CALCULAR EL PRECIO DE VENTA UNITARIO ---
         # Recupera el costo total de mezcla usado para esta tanda de embotellado:
-        costo_mezcla_consumida = costo_total_mezcla
-        costo_embotellado = costo_total - costo_total_mezcla
+        costo_embotellado = (costo_total_botellas + costo_mano_obra).quantize(Decimal('0.01'))
 
-        suma_costos = costo_mezcla_consumida + costo_embotellado
-        margen = Decimal('0.50')  # 50% margen (puedes ajustar aquí)
+        suma_costos = costo_total_mezcla + costo_embotellado + cif
+        margen = Decimal('0.50')  # 50% margen (puedes ajustar aquí) 
         precio_venta_unitario = (suma_costos / Decimal(botellas_a_fabricar)) * (1 + margen)
-        precio_venta_unitario = precio_venta_unitario.quantize(Decimal('0.02'))
+        precio_venta_unitario = precio_venta_unitario.quantize(Decimal('0.01'))
 
         # --- REGISTRO DE PROCESO ---
         producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Licor de Café 750ml")
@@ -1072,7 +1081,7 @@ def fabricar_embotellar_licor(request):
             'proceso': proceso,
             'consumido_lotes_mezcla': consumido_lotes_mezcla,
             'consumido_lotes_botella': consumido_lotes_botella,
-            'costo_mezcla': costo_mezcla_consumida,
+            'costo_mezcla': costo_total_mezcla,
             'costo_embotellado': costo_embotellado,
             'precio_venta_unitario': precio_venta_unitario,
         })
