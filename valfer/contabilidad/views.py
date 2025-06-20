@@ -755,6 +755,18 @@ def fabricar_mezcla_licor(request):
                 mov.saldo_cantidad -= a_consumir
                 mov.saldo_total -= a_consumir * mov.costo_unitario
                 mov.save()
+
+                KardexMateriaPrima.objects.create(
+                    materia_prima=mp_cafe,
+                    fecha=timezone.now(),
+                    tipo_movimiento='salida',
+                    concepto="Consumo para Mezcla de Licor",
+                    cantidad=a_consumir,
+                    costo_unitario=mov.costo_unitario,
+                    total=(a_consumir * mov.costo_unitario),
+                    saldo_cantidad=mov.saldo_cantidad,
+                    saldo_total=mov.saldo_total,
+                )
                 cantidad_cafe_restante -= a_consumir
             if cantidad_cafe_restante <= 0:
                 break
@@ -777,6 +789,18 @@ def fabricar_mezcla_licor(request):
                 mov.saldo_cantidad -= a_consumir
                 mov.saldo_total -= a_consumir * mov.costo_unitario
                 mov.save()
+
+                KardexMateriaPrima.objects.create(
+                    materia_prima=mp_licor,
+                    fecha=timezone.now(),
+                    tipo_movimiento='salida',
+                    concepto="Consumo para Mezcla de Licor",
+                    cantidad=a_consumir,
+                    costo_unitario=mov.costo_unitario,
+                    total=(a_consumir * mov.costo_unitario),
+                    saldo_cantidad=mov.saldo_cantidad,
+                    saldo_total=mov.saldo_total,
+                )
                 cantidad_licor_restante -= a_consumir
             if cantidad_licor_restante <= 0:
                 break
@@ -800,6 +824,18 @@ def fabricar_mezcla_licor(request):
                 mov.saldo_cantidad -= a_consumir
                 mov.saldo_total -= a_consumir * mov.costo_unitario
                 mov.save()
+
+                KardexMateriaPrima.objects.create(
+                    materia_prima=mp_agua,
+                    fecha=timezone.now(),
+                    tipo_movimiento='salida',
+                    concepto="Consumo para Mezcla de Licor",
+                    cantidad=a_consumir,
+                    costo_unitario=mov.costo_unitario,
+                    total=(a_consumir * mov.costo_unitario),
+                    saldo_cantidad=mov.saldo_cantidad,
+                    saldo_total=mov.saldo_total,
+                )
                 cantidad_agua_restante -= a_consumir
             if cantidad_agua_restante <= 0:
                 break
