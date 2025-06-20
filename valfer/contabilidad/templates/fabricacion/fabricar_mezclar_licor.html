@@ -26,4 +26,18 @@
     </form>
 </div>
 <a href="{% url 'home' %}" class="text-emerald-700 underline">Volver al inicio</a>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                icon: '{% if message.tags == "success" %}success{% else %}error{% endif %}',
+                title: '{{ message|escapejs }}',
+                confirmButtonColor: '#3085d6'
+            });
+        {% endfor %}
+    {% endif %}
+</script>
+
 {% endblock %}
