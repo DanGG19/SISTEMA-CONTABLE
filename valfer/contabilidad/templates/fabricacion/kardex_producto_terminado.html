@@ -14,7 +14,6 @@
         <th class="border px-2 py-1">Entradas<br>Unidades</th>
         <th class="border px-2 py-1">Costo Unitario</th>
         <th class="border px-2 py-1">Total</th>
-        <th class="border px-2 py-1">Precio de Venta</th>
         <th class="border px-2 py-1">Salidas<br>Unidades</th>
         <th class="border px-2 py-1">Costo Unitario</th>
         <th class="border px-2 py-1">Total</th>
@@ -33,18 +32,10 @@
             <td class="border px-2 py-1">{{ mov.cantidad|floatformat:2 }}</td>
             <td class="border px-2 py-1">${{ mov.costo_unitario|floatformat:2 }}</td>
             <td class="border px-2 py-1">${{ mov.total|floatformat:2 }}</td>
-            <td class="border px-2 py-1">
-              {% if mov.precio_venta_unitario %}
-                <span class="font-bold text-blue-700">${{ mov.precio_venta_unitario|floatformat:2 }}</span>
-              {% else %}
-                -
-              {% endif %}
-            </td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
           {% elif mov.tipo_movimiento == 'salida' %}
-            <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>
             <td class="border px-2 py-1"></td>

@@ -57,3 +57,26 @@ def crear_asiento_kardex_materia_prima(materia, cantidad, precio_unitario_con_iv
 
     # Crédito
     DetalleAsiento.objects.create(asiento=asiento, fecha=fecha_hoy, cuenta=cuenta_efectivo, debe=0, haber=total_con_iva)
+
+def crear_asiento_ingreso_inventario(producto, cantidad, costo_total):
+    """
+    Registra un asiento contable que refleja únicamente el ingreso al inventario
+    de producto terminado, sin contrapartida (uso específico para control interno).
+    """
+
+    fecha_hoy = timezone.now().date()
+
+    asiento = AsientoContable.objects.create(
+        fecha=fecha_hoy,
+        descripcion=f"Ingreso al inventario por fabricación de {cantidad} unidades de {producto.nombre}"
+    )
+
+    cuenta_inventario_pt = CuentaContable.objects.get(codigo='1105.03')  # Inventario Producto Terminado
+
+    DetalleAsiento.objects.create(
+        asiento=asiento,
+        fecha=fecha_hoy,
+        cuenta=cuenta_inventario_pt,
+        debe=Decimal(costo_total),
+        haber=0
+    )

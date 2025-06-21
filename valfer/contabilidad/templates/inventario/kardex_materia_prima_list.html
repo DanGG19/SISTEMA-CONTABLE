@@ -1,66 +1,74 @@
 {% extends 'contabilidad/base.html' %}
 
-{% block title %}Kardex de {{ materia.nombre }}{% endblock %}
+{% block title %}
+  Kardex de {{ materia.nombre }}
+{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-bold mb-4 text-center text-red-700">Kardex de {{ materia.nombre }}</h2>
+  <h2 class="text-2xl font-bold mb-4 text-center text-red-700">Kardex de {{ materia.nombre }}</h2>
 
-<div class="overflow-x-auto">
-  <table class="w-full text-sm border text-center">
-    <thead class="bg-cyan-900 text-white">
-      <tr>
-        <th class="border px-2 py-1">No.</th>
-        <th class="border px-2 py-1">Fecha</th>
-        <th class="border px-2 py-1">Concepto</th>
-        <th class="border px-2 py-1">Entradas<br>Unidades</th>
-        <th class="border px-2 py-1">Costo Unitario</th>
-        <th class="border px-2 py-1">Total</th>
-        <th class="border px-2 py-1">Salidas<br>Unidades</th>
-        <th class="border px-2 py-1">Costo Unitario</th>
-        <th class="border px-2 py-1">Total</th>
-        <th class="border px-2 py-1">Existencias<br>Unidades</th>
-        <th class="border px-2 py-1">Costo Unitario</th>
-        <th class="border px-2 py-1">Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for mov, exist in movimientos_y_lotes %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm border text-center">
+      <thead class="bg-cyan-900 text-white">
         <tr>
-          <td class="border px-2 py-1">{{ forloop.counter }}</td>
-          <td class="border px-2 py-1">{{ mov.fecha }}</td>
-          <td class="border px-2 py-1">{{ mov.concepto }}</td>
-          {% if mov.tipo_movimiento == 'entrada' %}
-            <td class="border px-2 py-1">{{ mov.cantidad|floatformat:2 }}</td>
-            <td class="border px-2 py-1">{{ mov.costo_unitario|floatformat:2 }}</td>
-            <td class="border px-2 py-1">{{ mov.total|floatformat:2 }}</td>
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-          {% elif mov.tipo_movimiento in 'salida proceso' %}
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1">{{ mov.cantidad|floatformat:2 }}</td>
-            <td class="border px-2 py-1">{{ mov.costo_unitario|floatformat:2 }}</td>
-            <td class="border px-2 py-1">{{ mov.total|floatformat:2 }}</td>
-          {% else %}
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-            <td class="border px-2 py-1"></td>
-          {% endif %}
-          <!-- Existencias -->
-          <td class="border px-2 py-1">{{ exist.unidades_totales|floatformat:2 }}</td>
-          <td class="border px-2 py-1">{{ exist.detalle|safe }}</td>
-          <td class="border px-2 py-1">{{ exist.valor_total|floatformat:2 }}</td>
+          <th class="border px-2 py-1">No.</th>
+          <th class="border px-2 py-1">Fecha</th>
+          <th class="border px-2 py-1">Concepto</th>
+          <th class="border px-2 py-1">
+            Entradas<br />Unidades
+          </th>
+          <th class="border px-2 py-1">Costo Unitario</th>
+          <th class="border px-2 py-1">Total</th>
+          <th class="border px-2 py-1">
+            Salidas<br />Unidades
+          </th>
+          <th class="border px-2 py-1">Costo Unitario</th>
+          <th class="border px-2 py-1">Total</th>
+          <th class="border px-2 py-1">
+            Existencias<br />Unidades
+          </th>
+          <th class="border px-2 py-1">Costo Unitario</th>
+          <th class="border px-2 py-1">Total</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-<div class="mt-4">
-  <a href="{% url 'kardex_materia_prima_nuevo' materia.id %}" class="inline-block bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">Agregar Movimiento</a>
-</div>
+      </thead>
+      <tbody>
+        {% for mov_ext, exist in movimientos_y_lotes %}
+          <tr>
+            <td class="border px-2 py-1">{{ forloop.counter }}</td>
+            <td class="border px-2 py-1">{{ mov_ext.mov.fecha }}</td>
+            <td class="border px-2 py-1">{{ mov_ext.mov.concepto }}</td>
+            {% if mov_ext.mov.tipo_movimiento == 'entrada' %}
+              <td class="border px-2 py-1">{{ mov_ext.mov.cantidad|floatformat:2 }}</td>
+              <td class="border px-2 py-1">{{ mov_ext.costo_unitario_sin_iva|floatformat:2 }}</td>
+              <td class="border px-2 py-1">{{ mov_ext.total_sin_iva|floatformat:2 }}</td>
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+            {% elif mov_ext.mov.tipo_movimiento in 'salida proceso' %}
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1">{{ mov_ext.mov.cantidad|floatformat:2 }}</td>
+              <td class="border px-2 py-1">{{ mov_ext.costo_unitario_sin_iva|floatformat:2 }}</td>
+              <td class="border px-2 py-1">{{ mov_ext.total_sin_iva|floatformat:2 }}</td>
+            {% else %}
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+              <td class="border px-2 py-1"></td>
+            {% endif %}
+            <!-- Existencias -->
+            <td class="border px-2 py-1">{{ exist.unidades_totales|floatformat:2 }}</td>
+            <td class="border px-2 py-1">{{ exist.detalle|safe }}</td>
+            <td class="border px-2 py-1">{{ exist.valor_total|floatformat:2 }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-4">
+    <a href="{% url 'kardex_materia_prima_nuevo' materia.id %}" class="inline-block bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 transition">Agregar Movimiento</a>
+  </div>
 {% endblock %}

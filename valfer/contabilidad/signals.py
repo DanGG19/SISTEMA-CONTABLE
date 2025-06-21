@@ -76,7 +76,11 @@ def crear_materias_primas_iniciales(sender, **kwargs):
     if sender.name == 'contabilidad':
         materias_primas_iniciales = [
             {
-                'nombre': 'Café en Quintales',
+                'nombre': 'Café en Quintales para tostar',
+                'unidad_medida': 'quintal'
+            },
+            {
+                'nombre': 'Café en Quintales para Licor',
                 'unidad_medida': 'quintal'
             },
             {

@@ -101,7 +101,7 @@ class KardexMateriaPrima(models.Model):
     tipo_movimiento = models.CharField(max_length=20, choices=[('entrada','Entrada'),('salida','Salida'),('proceso','Consumo Proceso')])
     concepto = models.CharField(max_length=255, blank=True, null=True)  # Ej: factura, proceso, etc.
     cantidad = models.DecimalField(max_digits=12, decimal_places=2)
-    costo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    costo_unitario = models.DecimalField(max_digits=12, decimal_places=6)
     total = models.DecimalField(max_digits=12, decimal_places=2)
     saldo_cantidad = models.DecimalField(max_digits=12, decimal_places=2)
     saldo_total = models.DecimalField(max_digits=12, decimal_places=2)
@@ -116,7 +116,7 @@ class KardexProductoTerminado(models.Model):
     tipo_movimiento = models.CharField(max_length=20, choices=[('ingreso','Ingreso Proceso'),('salida','Venta')])
     concepto = models.CharField(max_length=255, blank=True, null=True)
     cantidad = models.DecimalField(max_digits=12, decimal_places=2)
-    costo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    costo_unitario = models.DecimalField(max_digits=12, decimal_places=6)
     precio_venta_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     total = models.DecimalField(max_digits=12, decimal_places=2)
     saldo_cantidad = models.DecimalField(max_digits=12, decimal_places=2)

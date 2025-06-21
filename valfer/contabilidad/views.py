@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from .utils import crear_asiento_venta, crear_asiento_kardex_materia_prima
+from .utils import crear_asiento_venta, crear_asiento_kardex_materia_prima,crear_asiento_ingreso_inventario
 
 
 def home(request):
@@ -412,14 +412,28 @@ def logout_view(request):
 def kardex_home(request):
     return render(request, 'inventario/kardex_home.html')
 
-def kardex_materia_prima_list(request, materia_prima_id):
+def kardex_materia_prima_list(request, materia_prima_id): 
     materia = get_object_or_404(MateriaPrima, id=materia_prima_id)
     movimientos = KardexMateriaPrima.objects.filter(materia_prima=materia).order_by('fecha', 'id')
     existencias_peps = calcular_existencias_peps(movimientos)
-    movimientos_y_lotes = zip(movimientos, existencias_peps)
+    porcentaje_iva = Decimal("13")  # Usa Decimal, no float
+    existencias_peps = calcular_existencias_peps(movimientos, porcentaje_iva=porcentaje_iva)
+    factor_iva = Decimal('1') + (porcentaje_iva / Decimal('100'))
+
+    movimientos_ext = []
+    for mov in movimientos:
+        costo_unitario_sin_iva = (mov.costo_unitario / factor_iva).quantize(Decimal('0.01'))
+        total_sin_iva = (mov.total / factor_iva).quantize(Decimal('0.01'))
+        movimientos_ext.append({
+            'mov': mov,
+            'costo_unitario_sin_iva': costo_unitario_sin_iva,
+            'total_sin_iva': total_sin_iva,
+        })
+    movimientos_y_lotes = zip(movimientos_ext, existencias_peps)
     return render(request, 'inventario/kardex_materia_prima_list.html', {
         'materia': materia,
         'movimientos_y_lotes': movimientos_y_lotes,
+        'porcentaje_iva': porcentaje_iva,
     })
 
 
@@ -478,15 +492,22 @@ def kardex_materia_prima_nuevo(request, materia_prima_id):
         'form': form,
     })
 
-def calcular_existencias_peps(movimientos):
+def calcular_existencias_peps(movimientos, porcentaje_iva=Decimal("13")):
     lotes = []
     estado_por_movimiento = []
 
+    factor_iva = Decimal('1') + (porcentaje_iva / Decimal('100'))
+
     for mov in movimientos:
         if mov.tipo_movimiento == 'entrada':
+            # Guardamos también el costo unitario y total sin iva
+            cantidad = float(mov.cantidad)
+            costo_unitario_con_iva = float(mov.costo_unitario)
+            costo_unitario_sin_iva = float(Decimal(str(mov.costo_unitario)) / factor_iva)
             lotes.append({
-                'cantidad': float(mov.cantidad),
-                'costo_unitario': float(mov.costo_unitario),
+                'cantidad': cantidad,
+                'costo_unitario_con_iva': costo_unitario_con_iva,
+                'costo_unitario_sin_iva': costo_unitario_sin_iva,
             })
         elif mov.tipo_movimiento in ['salida', 'proceso']:
             cantidad_restante = float(mov.cantidad)
@@ -499,13 +520,13 @@ def calcular_existencias_peps(movimientos):
                     cantidad_restante -= lote['cantidad']
                     lotes.pop(0)
 
-        # String tipo "(4x250)+(2x200)"
+        # Arma el detalle usando sin iva
         detalle = "+".join(
-            f"({int(l['cantidad'])}*{int(l['costo_unitario'])})" for l in lotes if l['cantidad'] > 0
+            f"({int(l['cantidad'])}*{int(l['costo_unitario_sin_iva'])})" for l in lotes if l['cantidad'] > 0
         ) if lotes else "0"
 
         unidades_totales = sum(l['cantidad'] for l in lotes)
-        valor_total = sum(l['cantidad'] * l['costo_unitario'] for l in lotes)
+        valor_total = sum(l['cantidad'] * l['costo_unitario_sin_iva'] for l in lotes)
 
         estado_por_movimiento.append({
             "detalle": detalle,
@@ -538,7 +559,7 @@ def kardex_producto_terminado(request, producto_id):
             lotes_actuales.append({
                 'cantidad': mov.cantidad,
                 'costo_unitario': mov.costo_unitario,
-                'precio_venta_unitario': mov.precio_venta_unitario or mov.costo_unitario  # Fallback por si no está definido
+                # No necesitas precio_venta_unitario aquí para las existencias
             })
             total_existencias += mov.cantidad
 
@@ -555,14 +576,14 @@ def kardex_producto_terminado(request, producto_id):
             lotes_actuales = [l for l in lotes_actuales if l['cantidad'] > 0]
             total_existencias -= mov.cantidad
 
-        # Usar el precio de venta unitario para calcular el total de existencias (valor potencial de venta)
+        # Usar costo_unitario real para calcular el total de existencias (valor real en inventario)
         total_valor = sum(
-            l['cantidad'] * l.get('precio_venta_unitario', l['costo_unitario'])
+            l['cantidad'] * l['costo_unitario']
             for l in lotes_actuales
         )
-        # Detalle muestra el cálculo con precio de venta unitario
+        # Detalle muestra el cálculo con costo unitario real
         detalle_existencias = " + ".join(
-            [f"({float(l['cantidad']):.2f}*{float(l.get('precio_venta_unitario', l['costo_unitario'])):.2f})"
+            [f"({float(l['cantidad']):.2f}*{float(l['costo_unitario']):.2f})"
              for l in lotes_actuales]
         ) if lotes_actuales else ""
         movimientos_y_lotes.append((
@@ -595,6 +616,7 @@ def kardex_producto_terminado(request, producto_id):
         'fabricar_url': fabricar_url,
         'texto_boton': texto_boton,
     })
+    
 
 def fabricar_embolsar_cafe(request):
     if request.method == 'POST':
@@ -618,7 +640,7 @@ def fabricar_embolsar_cafe(request):
         gramos_necesarios = Decimal(bolsas_a_fabricar) * Decimal('400')
         quintales_necesarios = (gramos_necesarios / Decimal('100000')).quantize(Decimal('0.0001'))
 
-        materia_prima = get_object_or_404(MateriaPrima, nombre__iexact="Café en Quintales")
+        materia_prima = get_object_or_404(MateriaPrima, nombre__iexact="Café en Quintales para tostar")
         movimientos = KardexMateriaPrima.objects.filter(
             materia_prima=materia_prima
         ).order_by('fecha', 'id')
@@ -669,7 +691,7 @@ def fabricar_embolsar_cafe(request):
         costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
 
         # Precio de venta automático
-        precio_venta_unitario = (costo_total / Decimal(bolsas_a_fabricar)) * Decimal('1.5')
+        precio_venta_unitario = (costo_total / Decimal(bolsas_a_fabricar)) * Decimal('2.25')
         precio_venta_unitario = precio_venta_unitario.quantize(Decimal('0.01'))
 
         producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Bolsa Café 400g")
@@ -698,22 +720,20 @@ def fabricar_embolsar_cafe(request):
             tipo_movimiento='ingreso',
             concepto=f"Fabricación por proceso {proceso.id}",
             cantidad=Decimal(bolsas_a_fabricar),
-            costo_unitario=(costo_total / Decimal(bolsas_a_fabricar)).quantize(Decimal('0.01')),
+            costo_unitario=(costo_total / Decimal(bolsas_a_fabricar)),
             total=costo_total,
             saldo_cantidad=saldo_cantidad,
             saldo_total=saldo_total,
             precio_venta_unitario=precio_venta_unitario,
         )
 
-        messages.success(request, f"Fabricación registrada exitosamente. Costo total: ${costo_total:,.2f}")
-    
-        crear_asiento_venta(
+        #Generar Asiento Contable para ingreso a Inventario Producto Terminado
+        crear_asiento_ingreso_inventario(
             producto=producto_final,
             cantidad=bolsas_a_fabricar,
-            costo_unitario=(costo_total / Decimal(bolsas_a_fabricar)).quantize(Decimal('0.01')),
-            precio_venta_unitario=precio_venta_unitario,
-            porcentaje_iva=Decimal('13')
+            costo_total=costo_total
         )
+        messages.success(request, f"Fabricación registrada exitosamente. Costo total: ${costo_total:,.2f}")
         return render(request, 'fabricacion/fabricar_embolsar_cafe_exito.html', {
             'proceso': proceso,
             'consumido_lotes': consumido_lotes,
@@ -743,7 +763,6 @@ def fabricar_mezcla_licor(request):
             return redirect('fabricar_mezcla_licor')
 
         # 1. Cálculo de insumos requeridos (ajustar a tu lógica)
-        # Por cada 400 litros: 1 quintal café, 10 litros alcohol, 15 garrafones de agua (300 litros)
         proporcion = litros_a_fabricar / Decimal('400')
         quintales_cafe = proporcion * Decimal('1')
         litros_licor = proporcion * Decimal('10')
@@ -751,9 +770,24 @@ def fabricar_mezcla_licor(request):
         litros_agua = garrafones_agua * Decimal('20')
 
         # 2. Materias primas
-        mp_cafe = get_object_or_404(MateriaPrima, nombre__iexact="Café en Quintales")
+        mp_cafe = get_object_or_404(MateriaPrima, nombre__iexact="Café en Quintales para Licor")
         mp_licor = get_object_or_404(MateriaPrima, nombre__iexact="Botella de licor")
         mp_agua = get_object_or_404(MateriaPrima, nombre__iexact="Garrafón de agua")
+
+        # --- VERIFICAR EXISTENCIAS ANTES DE DESCONTAR ---
+        total_cafe_disponible = sum(mov.saldo_cantidad for mov in KardexMateriaPrima.objects.filter(materia_prima=mp_cafe))
+        total_licor_disponible = sum(mov.saldo_cantidad for mov in KardexMateriaPrima.objects.filter(materia_prima=mp_licor))
+        total_agua_disponible = sum(mov.saldo_cantidad for mov in KardexMateriaPrima.objects.filter(materia_prima=mp_agua))
+
+        if total_cafe_disponible < quintales_cafe:
+            messages.error(request, "No hay suficiente Café en Quintales para Licor.")
+            return redirect('fabricar_mezcla_licor')
+        if total_licor_disponible < litros_licor:
+            messages.error(request, "No hay suficiente Botella de licor.")
+            return redirect('fabricar_mezcla_licor')
+        if total_agua_disponible < garrafones_agua:
+            messages.error(request, "No hay suficiente Garrafón de agua.")
+            return redirect('fabricar_mezcla_licor')
 
         # --- Consumo de Café
         movimientos_cafe = KardexMateriaPrima.objects.filter(materia_prima=mp_cafe).order_by('fecha', 'id')
@@ -858,10 +892,6 @@ def fabricar_mezcla_licor(request):
             if cantidad_agua_restante <= 0:
                 break
 
-        if cantidad_cafe_restante > 0 or cantidad_licor_restante > 0 or cantidad_agua_restante > 0:
-            messages.error(request, "No hay suficiente materia prima para fabricar esa cantidad de licor de café.")
-            return redirect('fabricar_mezcla_licor')
-
         # 3. Costos
         costo_mp = costo_total_cafe + costo_total_licor + costo_total_agua
         costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
@@ -911,6 +941,7 @@ def fabricar_mezcla_licor(request):
         return render(request, 'fabricacion/fabricar_mezclar_licor_exito.html', context)
 
     return render(request, 'fabricacion/fabricar_mezclar_licor.html')
+
 
 
 #View para embotellar licor
@@ -1038,7 +1069,7 @@ def fabricar_embotellar_licor(request):
         costo_embotellado = (costo_total_botellas + costo_mano_obra).quantize(Decimal('0.01'))
 
         suma_costos = costo_total_mezcla + costo_embotellado + cif
-        margen = Decimal('0.50')  # 50% margen (puedes ajustar aquí) 
+        margen = Decimal('1.25')  # 50% margen (puedes ajustar aquí) 
         precio_venta_unitario = (suma_costos / Decimal(botellas_a_fabricar)) * (1 + margen)
         precio_venta_unitario = precio_venta_unitario.quantize(Decimal('0.01'))
 
@@ -1075,15 +1106,14 @@ def fabricar_embotellar_licor(request):
             saldo_total=saldo_total,
             precio_venta_unitario=precio_venta_unitario,   # <-- aquí se almacena el precio de venta unitario
         )
+        #Generar Asiento Contable para ingreso a Inventario Producto Terminado
+        crear_asiento_ingreso_inventario(
+            producto=producto_final,
+            cantidad=botellas_a_fabricar,
+            costo_total=costo_total
+        )
 
         messages.success(request, f"Embotellado registrado exitosamente. Costo total: ${costo_total:,.2f}")
-        crear_asiento_venta(
-            producto_final,
-            cantidad=botellas_a_fabricar,
-            costo_unitario=(costo_total / Decimal(botellas_a_fabricar)).quantize(Decimal('0.01')),
-            precio_venta_unitario=precio_venta_unitario,
-            porcentaje_iva=Decimal('13')
-        )
         return render(request, 'fabricacion/fabricar_embotellar_licor_exito.html', {
             'proceso': proceso,
             'consumido_lotes_mezcla': consumido_lotes_mezcla,
