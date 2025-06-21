@@ -1207,3 +1207,87 @@ def vender_producto_terminado(request):
     return render(request, 'ventas/vender_producto.html', {
         'productos': productos
     })
+    
+        
+def vista_consolidar_iva(request):
+    meses = list(range(1, 13))
+    anios = list(range(2023, date.today().year + 2))
+
+    mes = int(request.GET.get('mes', date.today().month))
+    anio = int(request.GET.get('anio', date.today().year))
+
+    # Traer cuentas
+    try:
+        cuenta_credito = CuentaContable.objects.get(codigo="1104")
+        cuenta_debito = CuentaContable.objects.get(codigo="2106")
+    except CuentaContable.DoesNotExist:
+        messages.error(request, "No existen cuentas 1104 o 2106 en el catálogo.")
+        return render(request, 'contabilidad/consolidar_iva.html', {
+            'meses': meses, 'anios': anios, 'mes': mes, 'anio': anio
+        })
+
+    # Calcular total crédito
+    detalles_credito = DetalleAsiento.objects.filter(
+        cuenta=cuenta_credito, fecha__month=mes, fecha__year=anio
+    )
+    iva_credito = sum(d.debe for d in detalles_credito) - sum(d.haber for d in detalles_credito)
+
+    # Calcular total débito
+    detalles_debito = DetalleAsiento.objects.filter(
+        cuenta=cuenta_debito, fecha__month=mes, fecha__year=anio
+    )
+    iva_debito = sum(d.haber for d in detalles_debito) - sum(d.debe for d in detalles_debito)
+
+    iva_pagar = None
+    resultado = None
+
+    if iva_debito > iva_credito:
+        iva_pagar = iva_debito - iva_credito
+        resultado = "IVA por pagar"
+    elif iva_credito > iva_debito:
+        iva_pagar = iva_credito - iva_debito
+        resultado = "Remanente de IVA a favor"
+    else:
+        iva_pagar = Decimal('0.00')
+        resultado = "No hay saldo a favor ni por pagar"
+
+    # Si es POST, generar asiento contable automáticamente
+    if request.method == 'POST' and iva_pagar > 0:
+        descripcion = f"Consolidación IVA {mes}/{anio} - {resultado}"
+        asiento = AsientoContable.objects.create(
+            fecha=date(anio, mes, 1),
+            descripcion=descripcion
+        )
+
+        if resultado == "IVA por pagar":
+            DetalleAsiento.objects.create(
+                asiento=asiento, fecha=asiento.fecha, descripcion=descripcion,
+                cuenta=cuenta_debito, debe=iva_debito, haber=Decimal('0.00')
+            )
+            DetalleAsiento.objects.create(
+                asiento=asiento, fecha=asiento.fecha, descripcion=descripcion,
+                cuenta=cuenta_credito, debe=Decimal('0.00'), haber=iva_credito
+            )
+        else:
+            DetalleAsiento.objects.create(
+                asiento=asiento, fecha=asiento.fecha, descripcion=descripcion,
+                cuenta=cuenta_credito, debe=iva_credito, haber=Decimal('0.00')
+            )
+            DetalleAsiento.objects.create(
+                asiento=asiento, fecha=asiento.fecha, descripcion=descripcion,
+                cuenta=cuenta_debito, debe=Decimal('0.00'), haber=iva_debito
+            )
+        messages.success(request, f"Asiento generado correctamente: {descripcion}")
+        return redirect(request.path + f'?mes={mes}&anio={anio}')
+
+    context = {
+        'meses': meses,
+        'anios': anios,
+        'mes': mes,
+        'anio': anio,
+        'iva_credito': iva_credito,
+        'iva_debito': iva_debito,
+        'iva_pagar': iva_pagar,
+        'resultado': resultado
+    }
+    return render(request, 'contabilidad/consolidar_iva.html', context)

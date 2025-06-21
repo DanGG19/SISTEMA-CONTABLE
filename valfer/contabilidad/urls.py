@@ -16,6 +16,7 @@ urlpatterns = [
     path('asientos/<int:asiento_id>/', views.ver_asiento, name='ver_asiento'),
     path('asientos/<int:asiento_id>/eliminar/', views.eliminar_asiento, name='eliminar_asiento'),
     path('libro-mayor/', views.libro_mayor, name='libro_mayor'),
+    path('consolidar-iva', views.vista_consolidar_iva, name='vista_consolidar_iva'),
     
     #Para estados financieros
     path('hoja_trabajo/', views.hoja_trabajo, name='hoja_trabajo'),
