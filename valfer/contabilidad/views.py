@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from .utils import crear_asiento_venta, crear_asiento_kardex_materia_prima,crear_asiento_ingreso_inventario
+from .utils import crear_asiento_venta, crear_asiento_kardex_materia_prima,crear_asiento_ingreso_inventario,registrar_venta_producto_terminado
 
 
 def home(request):
@@ -1107,10 +1107,12 @@ def fabricar_embotellar_licor(request):
             precio_venta_unitario=precio_venta_unitario,   # <-- aquí se almacena el precio de venta unitario
         )
         #Generar Asiento Contable para ingreso a Inventario Producto Terminado
-        crear_asiento_ingreso_inventario(
+        registrar_venta_producto_terminado(
             producto=producto_final,
             cantidad=botellas_a_fabricar,
-            costo_total=costo_total
+            costo_total=costo_total,
+            precio_unitario_venta=precio_venta_unitario,
+            porcentaje_iva=Decimal('13')
         )
 
         messages.success(request, f"Embotellado registrado exitosamente. Costo total: ${costo_total:,.2f}")

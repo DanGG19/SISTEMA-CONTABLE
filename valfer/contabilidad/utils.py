@@ -80,3 +80,49 @@ def crear_asiento_ingreso_inventario(producto, cantidad, costo_total):
         debe=Decimal(costo_total),
         haber=0
     )
+
+def registrar_venta_producto_terminado(producto, cantidad, costo_total, precio_unitario_venta, porcentaje_iva):
+    """
+    Registra los asientos contables correspondientes a la venta de un producto terminado:
+    1. Asiento de costo de venta
+    2. Asiento de ingreso con IVA desglosado
+    """
+    fecha_hoy = timezone.now().date()
+
+    # --- ASIENTO 1: Costo de venta ---
+    asiento_costo = AsientoContable.objects.create(
+        fecha=fecha_hoy,
+        descripcion=f"Costo de venta de {cantidad} unidades de {producto.nombre}"
+    )
+
+    cuenta_costo_venta = CuentaContable.objects.get(codigo='4101')
+    cuenta_inventario_pt = CuentaContable.objects.get(codigo='1105.03')
+
+    DetalleAsiento.objects.create(asiento=asiento_costo, fecha=fecha_hoy,
+        cuenta=cuenta_costo_venta, debe=Decimal(costo_total), haber=0)
+
+    DetalleAsiento.objects.create(asiento=asiento_costo, fecha=fecha_hoy,
+        cuenta=cuenta_inventario_pt, debe=0, haber=Decimal(costo_total))
+
+    # --- ASIENTO 2: Ingreso por venta con IVA ---
+    total_bruto = (Decimal(cantidad) * Decimal(precio_unitario_venta)).quantize(Decimal('0.01'))
+    base = (total_bruto / (1 + Decimal(porcentaje_iva) / 100)).quantize(Decimal('0.01'))
+    iva = (total_bruto - base).quantize(Decimal('0.01'))
+
+    asiento_venta = AsientoContable.objects.create(
+        fecha=fecha_hoy,
+        descripcion=f"Venta de {cantidad} unidades de {producto.nombre} a ${precio_unitario_venta} c/u"
+    )
+
+    cuenta_efectivo = CuentaContable.objects.get(codigo='1101')
+    cuenta_ingresos = CuentaContable.objects.get(codigo='51')
+    cuenta_iva = CuentaContable.objects.get(codigo='2106')
+
+    DetalleAsiento.objects.create(asiento=asiento_venta, fecha=fecha_hoy,
+        cuenta=cuenta_efectivo, debe=total_bruto, haber=0)
+
+    DetalleAsiento.objects.create(asiento=asiento_venta, fecha=fecha_hoy,
+        cuenta=cuenta_ingresos, debe=0, haber=base)
+
+    DetalleAsiento.objects.create(asiento=asiento_venta, fecha=fecha_hoy,
+        cuenta=cuenta_iva, debe=0, haber=iva)
