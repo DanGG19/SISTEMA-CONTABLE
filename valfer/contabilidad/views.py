@@ -728,10 +728,19 @@ def fabricar_embolsar_cafe(request):
         )
 
         #Generar Asiento Contable para ingreso a Inventario Producto Terminado
-        crear_asiento_ingreso_inventario(
+        #crear_asiento_ingreso_inventario(
+        #    producto=producto_final,
+        #    cantidad=bolsas_a_fabricar,
+        #    costo_total=costo_total
+        #)
+
+        # Generar asientos contables por la venta del producto terminado
+        registrar_venta_producto_terminado(
             producto=producto_final,
             cantidad=bolsas_a_fabricar,
-            costo_total=costo_total
+            costo_total=costo_total,
+            precio_unitario_venta=precio_venta_unitario,
+            porcentaje_iva=Decimal('13')
         )
         messages.success(request, f"Fabricación registrada exitosamente. Costo total: ${costo_total:,.2f}")
         return render(request, 'fabricacion/fabricar_embolsar_cafe_exito.html', {
