@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.utils import timezone
-from .models import AsientoContable, DetalleAsiento, CuentaContable
+from .models import *
 
 def crear_asiento_venta(producto, cantidad, costo_unitario, precio_venta_unitario, porcentaje_iva):
     """
@@ -29,3 +29,31 @@ def crear_asiento_venta(producto, cantidad, costo_unitario, precio_venta_unitari
     DetalleAsiento.objects.create(asiento=asiento, fecha=fecha_hoy, cuenta=cuenta_iva, debe=0, haber=monto_iva)
     DetalleAsiento.objects.create(asiento=asiento, fecha=fecha_hoy, cuenta=cuenta_costo, debe=total_costo, haber=0)
     DetalleAsiento.objects.create(asiento=asiento, fecha=fecha_hoy, cuenta=cuenta_inventario, debe=0, haber=total_costo)
+
+
+def crear_asiento_kardex_materia_prima(materia, cantidad, precio_unitario_con_iva, porcentaje_iva):
+    """
+    Crea asiento contable para compra de materia prima con precio unitario que YA incluye IVA.
+    """
+    fecha_hoy = timezone.now().date()
+    total_con_iva = Decimal(cantidad) * Decimal(precio_unitario_con_iva)
+
+    # Precio sin IVA
+    base = (total_con_iva / (1 + Decimal(porcentaje_iva) / 100)).quantize(Decimal('0.01'))
+    monto_iva = (total_con_iva - base).quantize(Decimal('0.01'))
+
+    asiento = AsientoContable.objects.create(
+        fecha=fecha_hoy,
+        descripcion=f"Compra de {cantidad} de {materia.nombre} a ${precio_unitario_con_iva} c/u IVA incluido"
+    )
+
+    cuenta_inventario = CuentaContable.objects.get(codigo='1105.01')   # Inventario MP
+    cuenta_iva = CuentaContable.objects.get(codigo='1104')          # IVA CREDITO FISCAL
+    cuenta_efectivo = CuentaContable.objects.get(codigo='1101')        # Efectivo y equivalente
+
+    # Débitos
+    DetalleAsiento.objects.create(asiento=asiento, fecha=fecha_hoy, cuenta=cuenta_inventario, debe=base, haber=0)
+    DetalleAsiento.objects.create(asiento=asiento, fecha=fecha_hoy, cuenta=cuenta_iva, debe=monto_iva, haber=0)
+
+    # Crédito
+    DetalleAsiento.objects.create(asiento=asiento, fecha=fecha_hoy, cuenta=cuenta_efectivo, debe=0, haber=total_con_iva)

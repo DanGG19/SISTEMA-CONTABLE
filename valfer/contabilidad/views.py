@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from .utils import crear_asiento_venta
+from .utils import crear_asiento_venta, crear_asiento_kardex_materia_prima
 
 
 def home(request):
@@ -463,6 +463,13 @@ def kardex_materia_prima_nuevo(request, materia_prima_id):
 
             movimiento.save()
             messages.success(request, "Movimiento registrado exitosamente.")
+            # Generar asiento contable automático
+            crear_asiento_kardex_materia_prima(
+                materia=movimiento.materia_prima,
+                cantidad=movimiento.cantidad,
+                precio_unitario_con_iva=movimiento.costo_unitario,  # ya viene con IVA
+                porcentaje_iva=13
+            )
             return redirect('kardex_materia_prima_list', materia_prima_id=materia.id)
     else:
         form = KardexMateriaPrimaForm()
@@ -658,7 +665,7 @@ def fabricar_embolsar_cafe(request):
 
         # Cálculo de mano de obra y CIF
         costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
-        cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.30')).quantize(Decimal('0.01'))
+        cif = ((costo_total_mp + costo_mano_obra) * Decimal('0.90')).quantize(Decimal('0.01'))
         costo_total = (costo_total_mp + costo_mano_obra + cif).quantize(Decimal('0.01'))
 
         # Precio de venta automático
@@ -858,7 +865,7 @@ def fabricar_mezcla_licor(request):
         # 3. Costos
         costo_mp = costo_total_cafe + costo_total_licor + costo_total_agua
         costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
-        cif = ((costo_mp + costo_mano_obra) * Decimal('0.80')).quantize(Decimal('0.01'))
+        cif = ((costo_mp + costo_mano_obra) * Decimal('0.90')).quantize(Decimal('0.01'))
         costo_total = (costo_mp + costo_mano_obra + cif).quantize(Decimal('0.02'))
 
         producto_final = get_object_or_404(ProductoTerminado, nombre__iexact="Mezcla de Licor de Café")
@@ -1020,7 +1027,7 @@ def fabricar_embotellar_licor(request):
         costo_mano_obra = (mano_obra_por_hora * horas_trabajadas).quantize(Decimal('0.01'))
         costo_total_mp = costo_total_mezcla + costo_total_botellas
 
-        cif_emb = Decimal('0.45')     # 45% para embotellado
+        cif_emb = Decimal('0.60')     # 60% para embotellado
 
         # Cálculo de CIF y costo total
         cif = ((costo_total_mp + costo_mano_obra) * cif_emb).quantize(Decimal('0.01'))
