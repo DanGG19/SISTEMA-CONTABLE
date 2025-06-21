@@ -47,6 +47,10 @@ urlpatterns = [
     path('kardex/embotellar_licor/', views.fabricar_embotellar_licor, name='fabricar_embotellar_licor'),
     #Inventario tipo de Kardex para café PEPS para Producto Terminado
     path('kardex/producto/<int:producto_id>/', views.kardex_producto_terminado, name='kardex_producto_terminado'),
+
+    #Inventario venta de productos terminados
+    path('ventas/nueva/', views.vender_producto_terminado, name='vender_producto_terminado'),
+
     
 
 

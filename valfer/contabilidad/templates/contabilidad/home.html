@@ -15,14 +15,18 @@
         <h3 class="font-bold text-lg text-amber-800">📝 Registrar Asientos</h3>
         <p class="text-sm text-gray-600">Ingresar transacciones contables.</p>
     </a>
-    <a href="{% url 'libro_mayor' %}"
-        class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+    <a href="{% url 'libro_mayor' %}" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
         <h3 class="font-bold text-lg text-amber-800">📖 Libro Mayor</h3>
         <p class="text-sm text-gray-600">Ver los movimientos y saldos de cada cuenta contable.</p>
     </a>
-        <a href="/planillas/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+    <a href="/planillas/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
         <h3 class="font-bold text-lg text-amber-800">👥 Planillas</h3>
         <p class="text-sm text-gray-600">Gestionar empleados y pagos de planilla.</p>
     </a>
+    <a href="/ventas/nueva/" class="bg-white shadow-md p-6 rounded hover:shadow-lg hover:bg-amber-50 transition">
+        <h3 class="font-bold text-lg text-amber-800">💰 Registrar Venta</h3>
+        <p class="text-sm text-gray-600">Realizar ventas de productos terminados y actualizar inventario y contabilidad.</p>
+    </a>
 </div>
+
 {% endblock %}

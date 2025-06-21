@@ -728,20 +728,12 @@ def fabricar_embolsar_cafe(request):
         )
 
         #Generar Asiento Contable para ingreso a Inventario Producto Terminado
-        #crear_asiento_ingreso_inventario(
-        #    producto=producto_final,
-        #    cantidad=bolsas_a_fabricar,
-        #    costo_total=costo_total
-        #)
-
-        # Generar asientos contables por la venta del producto terminado
-        registrar_venta_producto_terminado(
+        crear_asiento_ingreso_inventario(
             producto=producto_final,
             cantidad=bolsas_a_fabricar,
-            costo_total=costo_total,
-            precio_unitario_venta=precio_venta_unitario,
-            porcentaje_iva=Decimal('13')
+            costo_total=costo_total
         )
+
         messages.success(request, f"Fabricación registrada exitosamente. Costo total: ${costo_total:,.2f}")
         return render(request, 'fabricacion/fabricar_embolsar_cafe_exito.html', {
             'proceso': proceso,
@@ -1116,12 +1108,10 @@ def fabricar_embotellar_licor(request):
             precio_venta_unitario=precio_venta_unitario,   # <-- aquí se almacena el precio de venta unitario
         )
         #Generar Asiento Contable para ingreso a Inventario Producto Terminado
-        registrar_venta_producto_terminado(
+        crear_asiento_ingreso_inventario(
             producto=producto_final,
             cantidad=botellas_a_fabricar,
-            costo_total=costo_total,
-            precio_unitario_venta=precio_venta_unitario,
-            porcentaje_iva=Decimal('13')
+            costo_total=costo_total
         )
 
         messages.success(request, f"Embotellado registrado exitosamente. Costo total: ${costo_total:,.2f}")
@@ -1135,3 +1125,85 @@ def fabricar_embotellar_licor(request):
         })
 
     return render(request, 'fabricacion/fabricar_embotellar_licor.html')
+
+def vender_producto_terminado(request):
+    if request.method == 'POST':
+        try:
+            producto_id = int(request.POST['producto_id'])
+            cantidad_vender = Decimal(request.POST['cantidad'])
+            producto = get_object_or_404(ProductoTerminado, id=producto_id)
+        except (KeyError, ValueError, InvalidOperation):
+            messages.error(request, "Ingrese valores válidos.")
+            return redirect('vender_producto_terminado')
+
+        # Obtener precio de venta unitario desde el último ingreso al Kardex
+        ultimo_precio = KardexProductoTerminado.objects.filter(
+            producto=producto
+        ).order_by('-fecha', '-id').first()
+
+        if not ultimo_precio or not ultimo_precio.precio_venta_unitario:
+            messages.error(request, "No hay un precio de venta registrado para este producto.")
+            return redirect('vender_producto_terminado')
+
+        precio_unitario = ultimo_precio.precio_venta_unitario
+
+        # Calcular costo total desde Kardex PEPS y registrar salida
+        movimientos = KardexProductoTerminado.objects.filter(
+            producto=producto, saldo_cantidad__gt=0
+        ).order_by('fecha', 'id')
+
+        cantidad_restante = cantidad_vender
+        costo_total = Decimal('0')
+
+        for mov in movimientos:
+            if cantidad_restante <= 0:
+                break
+            a_consumir = min(mov.saldo_cantidad, cantidad_restante)
+            costo_total += a_consumir * mov.costo_unitario
+
+            nueva_saldo_cantidad = mov.saldo_cantidad - a_consumir
+            nueva_saldo_total = mov.saldo_total - (a_consumir * mov.costo_unitario)
+
+            KardexProductoTerminado.objects.create(
+                producto=producto,
+                fecha=timezone.now(),
+                tipo_movimiento='salida',
+                concepto="Venta de producto terminado",
+                cantidad=a_consumir,
+                costo_unitario=mov.costo_unitario,
+                total=(a_consumir * mov.costo_unitario),
+                saldo_cantidad=nueva_saldo_cantidad,
+                saldo_total=nueva_saldo_total,
+                precio_venta_unitario=precio_unitario
+            )
+
+            mov.saldo_cantidad = nueva_saldo_cantidad
+            mov.saldo_total = nueva_saldo_total
+            mov.save()
+
+            cantidad_restante -= a_consumir
+
+        if cantidad_restante > 0:
+            messages.error(request, "No hay suficiente stock en el inventario para completar la venta.")
+            return redirect('vender_producto_terminado')
+
+        # Registrar asiento contable de la venta
+        registrar_venta_producto_terminado(
+            producto=producto,
+            cantidad=cantidad_vender,
+            costo_total=costo_total,
+            precio_unitario_venta=precio_unitario,
+            porcentaje_iva=Decimal('13')
+        )
+
+        messages.success(request, f"Venta registrada exitosamente. Total venta: ${(cantidad_vender * precio_unitario):,.2f}")
+        return redirect('vender_producto_terminado')
+
+    # Mostrar solo productos que sí se venden (ej. no mostrar "Mezcla de licor de café")
+    productos = ProductoTerminado.objects.exclude(nombre__iexact="Mezcla de Licor de Café")
+    # Asignar ruta de imagen a cada producto
+    for producto in productos:
+        producto.imagen = f"img/{producto.id}.png"
+    return render(request, 'ventas/vender_producto.html', {
+        'productos': productos
+    })
